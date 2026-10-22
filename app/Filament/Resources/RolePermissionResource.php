@@ -16,12 +16,12 @@ class RolePermissionResource extends Resource
     protected static ?string $model = RolePermission::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
-
     protected static ?string $navigationLabel = 'Hak Akses Role';
-
     protected static ?string $navigationGroup = 'Manajemen Akses';
-
     protected static ?int $navigationSort = 1;
+
+    protected static ?string $modelLabel = 'Hak Akses Role';
+    protected static ?string $pluralModelLabel = 'Hak Akses Role';
 
     public static function shouldRegisterNavigation(): bool
     {

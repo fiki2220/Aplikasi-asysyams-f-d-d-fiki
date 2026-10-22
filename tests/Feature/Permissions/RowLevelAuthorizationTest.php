@@ -65,7 +65,7 @@ class RowLevelAuthorizationTest extends TestCase
             'tuition_fee' => 500000,
         ]);
 
-        $subjectA = Subject::create(['name' => 'Tahfidz Pagi', 'slug' => 'tahfidz-pagi']);
+        $subjectA = Subject::create(['name' => 'Tahfizh Pagi', 'slug' => 'tahfizh-pagi']);
         $subjectB = Subject::create(['name' => 'Tahsin Sore', 'slug' => 'tahsin-sore']);
 
         $this->classA = ClassGroup::create([

@@ -142,7 +142,7 @@ class StudentDashboardTest extends TestCase
         ]);
 
         $subject = Subject::create(['name' => 'Tahsin Dashboard', 'slug' => 'tahsin-dashboard']);
-        $otherSubject = Subject::create(['name' => 'Tahfidz Dashboard', 'slug' => 'tahfidz-dashboard']);
+        $otherSubject = Subject::create(['name' => 'Tahfizh Dashboard', 'slug' => 'tahfizh-dashboard']);
         $classGroup = ClassGroup::create([
             'name' => 'Tahsin Dashboard A',
             'slug' => 'tahsin-dashboard-a',

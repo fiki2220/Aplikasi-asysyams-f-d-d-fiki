@@ -34,11 +34,11 @@ class AcademicFlowTest extends TestCase
     public function test_can_create_subject_with_valid_data()
     {
         $subject = Subject::create([
-            'name' => 'Tahfidz Qur\'an',
-            'slug' => 'tahfidz-quran'
+            'name' => 'Tahfizh Qur\'an',
+            'slug' => 'tahfizh-quran'
         ]);
 
-        $this->assertDatabaseHas('subjects', ['name' => 'Tahfidz Qur\'an']);
+        $this->assertDatabaseHas('subjects', ['name' => 'Tahfizh Qur\'an']);
     }
 
     public function test_can_create_class_group_with_relations()
@@ -54,14 +54,14 @@ class AcademicFlowTest extends TestCase
         $subject = Subject::create(['name' => 'Sub1', 'slug' => 'sub1']);
 
         $classGroup = ClassGroup::create([
-            'name' => 'Kelas Tahfidz A',
-            'slug' => 'kelas-tahfidz-a',
+            'name' => 'Kelas Tahfizh A',
+            'slug' => 'kelas-tahfizh-a',
             'subject_id' => $subject->id,
             'semester_id' => $semester->id,
             'teacher_id' => $guru->id,
         ]);
 
-        $this->assertDatabaseHas('class_groups', ['name' => 'Kelas Tahfidz A']);
+        $this->assertDatabaseHas('class_groups', ['name' => 'Kelas Tahfizh A']);
         $this->assertEquals($subject->id, $classGroup->subject->id);
         $this->assertEquals($semester->id, $classGroup->semester->id);
         $this->assertEquals($guru->id, $classGroup->teacher->id);

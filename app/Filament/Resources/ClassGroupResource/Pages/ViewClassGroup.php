@@ -4,7 +4,7 @@ namespace App\Filament\Resources\ClassGroupResource\Pages;
 
 use App\Filament\Resources\ClassGroupResource;
 use Filament\Actions;
-use Filament\Resources\Pages\ViewRecord; // <-- Pastikan pakai ViewRecord
+use Filament\Resources\Pages\ViewRecord;
 
 class ViewClassGroup extends ViewRecord
 {
@@ -13,7 +13,15 @@ class ViewClassGroup extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\EditAction::make(),
+            Actions\EditAction::make()
+                ->label('Edit')
+                ->icon('heroicon-o-pencil-square')
+                ->color('warning'),
         ];
+    }
+
+    public function getTitle(): string
+    {
+        return "Detail Kelas • {$this->record->name}";
     }
 }

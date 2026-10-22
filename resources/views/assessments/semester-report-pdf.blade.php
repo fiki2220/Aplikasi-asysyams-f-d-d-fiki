@@ -209,9 +209,9 @@
         </table>
     @endif
 
-    <!-- Tahfidz Section -->
-    @if ($assessments->where('assessment_type', 'tahfidz')->count() > 0)
-        <div class="section-title">💚 PENILAIAN TAHFIDZ</div>
+    <!-- Tahfizh Section -->
+    @if ($assessments->where('assessment_type', 'tahfizh')->count() > 0)
+        <div class="section-title">💚 PENILAIAN TAHFIZH</div>
         <table>
             <thead>
                 <tr>
@@ -227,7 +227,7 @@
             </thead>
             <tbody>
                 @php $no = 1; @endphp
-                @foreach ($assessments->where('assessment_type', 'tahfidz') as $item)
+                @foreach ($assessments->where('assessment_type', 'tahfizh') as $item)
                     @if ($item->data)
                         @foreach ($item->data as $data)
                             <tr>

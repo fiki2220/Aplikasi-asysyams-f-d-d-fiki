@@ -7,41 +7,69 @@ use App\Features\Grades\Models\Evaluation;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Database\Eloquent\Model;
 
 class CreateEvaluation extends CreateRecord
 {
     protected static string $resource = EvaluationResource::class;
 
-    protected function getRedirectUrl(): string
-    {
-        return $this->getResource()::getUrl('index');
-    }
+    public int $createdCount = 0;
 
-    protected function handleRecordCreation(array $data): \Illuminate\Database\Eloquent\Model
+    protected function handleRecordCreation(array $data): Model
     {
         $userIds = $data['user_ids'] ?? [];
         $firstRecord = null;
-
-        foreach ($userIds as $userId) {
-            $record = Evaluation::create([
-                'class_group_id' => $data['class_group_id'],
-                'user_id' => $userId,
-                'evaluation_number' => $data['evaluation_number'],
-                'surah_name' => $data['surah_name'] ?? null,
-                'song_name' => $data['song_name'] ?? null,
-                'items' => $data['items'] ?? [],
-            ]);
-
-            if (!$firstRecord) {
-                $firstRecord = $record;
-            }
+        $this->createdCount = 0;
+        $jenis = $data['jenis'] ?? 'tilawah';
+        
+        // ⭐ Ambil nilai dari form, ubah menjadi Array JSON secara paksa
+        $nilai = $data['nilai_evaluasi'] ?? null;
+        $items = [];
+        if ($nilai !== null && $nilai !== '') {
+            $items = [
+                [
+                    'name'   => 'Nilai Evaluasi',
+                    'status' => 'Tercapai',
+                    'score'  => (float) $nilai,
+                ],
+            ];
         }
 
-        Notification::make()
-            ->title('Evaluasi berhasil dibuat untuk ' . count($userIds) . ' santri!')
-            ->success()
-            ->send();
+        foreach ($userIds as $userId) {
+            $lastNumber = Evaluation::where('class_group_id', $data['class_group_id'])
+                ->where('user_id', $userId)->where('jenis', $jenis)->max('evaluation_number') ?? 0;
+
+            $record = Evaluation::create([
+                'class_group_id'    => $data['class_group_id'],
+                'user_id'           => $userId,
+                'jenis'             => $jenis,
+                'evaluation_number' => $lastNumber + 1,
+                'surah_name'        => $data['surah_name'] ?? null,
+                'song_name'         => $data['song_name'] ?? null,
+                'items'             => $items, // ✅ Simpan JSON yang sudah kita buat manual
+            ]);
+
+            $this->createdCount++;
+            if (! $firstRecord) $firstRecord = $record;
+        }
 
         return $firstRecord;
+    }
+
+    protected function getCreateFormAction(): Actions\Action
+    {
+        return parent::getCreateFormAction()->label('💾 Simpan Evaluasi')->color('success');
+    }
+
+    protected function getCreatedNotification(): ?Notification
+    {
+        $count = $this->createdCount ?: 1;
+        $title = $count > 1 ? "{$count} santri berhasil diberi evaluasi." : "Santri \"{$this->record->student?->name}\" berhasil diberi evaluasi.";
+        return Notification::make()->success()->title('✅ Evaluasi Berhasil Disimpan')->body($title)->duration(4000);
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
     }
 }

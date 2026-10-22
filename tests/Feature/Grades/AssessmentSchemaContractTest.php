@@ -37,8 +37,8 @@ class AssessmentSchemaContractTest extends TestCase
         $subject = Subject::create(['name' => 'Al-Quran', 'slug' => 'al-quran']);
 
         $this->classGroup = ClassGroup::create([
-            'name' => 'Tahfidz A',
-            'slug' => 'tahfidz-a',
+            'name' => 'Tahfizh A',
+            'slug' => 'tahfizh-a',
             'subject_id' => $subject->id,
             'semester_id' => $semester->id,
             'teacher_id' => $this->teacher->id,
@@ -50,7 +50,7 @@ class AssessmentSchemaContractTest extends TestCase
 
     public function test_assessment_type_enum_has_canonical_values(): void
     {
-        $expectedValues = ['ziyadah', 'murojaah', 'tahsin', 'tilawah', 'tahfidz', 'tajwid'];
+        $expectedValues = ['ziyadah', 'murojaah', 'tahsin', 'tilawah', 'tahfizh', 'tajwid'];
         $this->assertEqualsCanonicalizing($expectedValues, AssessmentType::values());
     }
 
@@ -82,7 +82,7 @@ class AssessmentSchemaContractTest extends TestCase
         $this->assertArrayHasKey('murojaah', $options);
         $this->assertArrayHasKey('tahsin', $options);
         $this->assertArrayHasKey('tilawah', $options);
-        $this->assertArrayHasKey('tahfidz', $options);
+        $this->assertArrayHasKey('tahfizh', $options);
         $this->assertArrayHasKey('tajwid', $options);
     }
 }

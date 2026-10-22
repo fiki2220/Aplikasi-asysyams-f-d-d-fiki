@@ -63,7 +63,7 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         @php
             $tahsinStats = $stats['tahsin'] ?? [];
-            $tahfidzStats = $stats['tahfidz'] ?? [];
+            $tahfizhStats = $stats['tahfizh'] ?? [];
             $tajwidStats = $stats['tajwid'] ?? [];
         @endphp
 
@@ -78,14 +78,14 @@
             </div>
         </div>
 
-        <!-- Tahfidz -->
+        <!-- Tahfizh -->
         <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Tahfidz</h3>
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Tahfizh</h3>
             <div class="space-y-2 text-sm">
-                <p class="text-gray-600">Total: <span class="font-bold">{{ $tahfidzStats['total'] ?? 0 }}</span></p>
-                <p class="text-green-600">Lancar: <span class="font-bold">{{ $tahfidzStats['lancar'] ?? 0 }}</span></p>
-                <p class="text-yellow-600">Cukup: <span class="font-bold">{{ $tahfidzStats['cukup'] ?? 0 }}</span></p>
-                <p class="text-red-600">Tidak Lancar: <span class="font-bold">{{ $tahfidzStats['tidak_lancar'] ?? 0 }}</span></p>
+                <p class="text-gray-600">Total: <span class="font-bold">{{ $tahfizhStats['total'] ?? 0 }}</span></p>
+                <p class="text-green-600">Lancar: <span class="font-bold">{{ $tahfizhStats['lancar'] ?? 0 }}</span></p>
+                <p class="text-yellow-600">Cukup: <span class="font-bold">{{ $tahfizhStats['cukup'] ?? 0 }}</span></p>
+                <p class="text-red-600">Tidak Lancar: <span class="font-bold">{{ $tahfizhStats['tidak_lancar'] ?? 0 }}</span></p>
             </div>
         </div>
 
@@ -111,7 +111,7 @@
     </div>
 
     <!-- Detail Table -->
-    @foreach (['tahsin' => 'Tahsin', 'tahfidz' => 'Tahfidz', 'tajwid' => 'Tajwid'] as $key => $label)
+    @foreach (['tahsin' => 'Tahsin', 'tahfizh' => 'Tahfizh', 'tajwid' => 'Tajwid'] as $key => $label)
         @if (isset($assessments[$key]) && $assessments[$key]->count() > 0)
             <div class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
                 <div class="bg-emerald-700 text-white px-6 py-4">

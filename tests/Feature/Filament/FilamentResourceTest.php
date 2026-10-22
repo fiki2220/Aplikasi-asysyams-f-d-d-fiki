@@ -55,7 +55,7 @@ class FilamentResourceTest extends TestCase
             'admin/grades',
             'admin/role-permissions',
             'admin/site-settings',
-            'admin/raport',
+            'admin/rapor',
             'admin/candidates',
             'admin/semesters',
             'admin/users',

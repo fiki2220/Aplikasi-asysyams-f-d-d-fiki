@@ -1,17 +1,18 @@
 import './bootstrap';
 import Alpine from 'alpinejs';
 
+// Alpine Plugins
+import collapse from '@alpinejs/collapse';
+import focus from '@alpinejs/focus';
+import persist from '@alpinejs/persist';
+
+// Register plugins SEBELUM Alpine.start()
+Alpine.plugin(collapse);
+Alpine.plugin(focus);
+Alpine.plugin(persist);
+
+// Expose Alpine ke window (untuk debugging & akses dari inline script)
 window.Alpine = Alpine;
 
-// Tambahkan fungsi untuk menangani preloader
-window.addEventListener('load', () => {
-    const preloader = document.getElementById('preloader');
-    if (preloader) {
-        setTimeout(() => {
-            preloader.style.opacity = '0';
-            preloader.style.visibility = 'hidden';
-        }, 500);
-    }
-});
-
+// Start Alpine
 Alpine.start();

@@ -43,6 +43,13 @@ class ClassGroup extends Model
         'semester_id',
         'teacher_id',
         'description',
+        'start_time', // ✅ TAMBAHAN
+        'end_time',   // ✅ TAMBAHAN
+    ];
+
+    protected $casts = [
+        'start_time' => 'datetime:H:i',
+        'end_time'   => 'datetime:H:i',
     ];
 
     protected static function booted(): void
@@ -147,25 +154,21 @@ class ClassGroup extends Model
         }
     }
 
-    // Kelas milik subject apa? (Tilawah, Murottal, dst)
     public function subject()
     {
         return $this->belongsTo(Subject::class);
     }
 
-    // Kelas ini di semester berapa?
     public function semester()
     {
         return $this->belongsTo(Semester::class);
     }
 
-    // Kelas diajar oleh ustad siapa?
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id');
     }
 
-    // Kelas punya banyak santri
     public function students()
     {
         return $this->belongsToMany(User::class, 'class_group_student', 'class_group_id', 'user_id')
@@ -216,19 +219,15 @@ class ClassGroup extends Model
         $this->students()->attach($studentModel->id, $pivotData);
     }
 
-    // Kelas punya banyak penilaian
     public function assessments()
     {
         return $this->hasMany(Assessment::class);
     }
 
-    // Kelas punya banyak evaluasi
     public function evaluations()
     {
         return $this->hasMany(Evaluation::class);
     }
-
-// app/Models/ClassGroup.php
 
     public function meetings()
     {

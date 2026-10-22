@@ -72,7 +72,7 @@ class RedirectUnauthorizedFilamentAccess
             str_contains($routeName, '.resources.payments.') => 'payments',
             str_contains($routeName, '.resources.posts.') => 'posts',
             str_contains($routeName, '.resources.site-settings.') => 'settings',
-            str_contains($routeName, '.resources.raport.') => 'reports',
+            str_contains($routeName, '.resources.rapor.') => 'reports',
             str_contains($routeName, '.resources.users.') => 'users',
             default => null,
         };

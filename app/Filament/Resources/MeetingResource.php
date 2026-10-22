@@ -11,6 +11,8 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Tables\Grouping\Group;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class MeetingResource extends Resource
@@ -18,11 +20,14 @@ class MeetingResource extends Resource
     use \App\Filament\Concerns\ChecksResourcePermission;
 
     protected static ?string $model = Meeting::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
     protected static ?string $navigationGroup = 'Akademik (Ustad)';
     protected static ?string $navigationLabel = 'Jadwal & Absensi';
-    protected static ?string $label = 'Jadwal & Absensi';
-    protected static ?string $pluralLabel = 'Jadwal & Absensi';
+    protected static ?string $modelLabel = 'Jadwal & Absensi';
+    protected static ?string $pluralModelLabel = 'Jadwal & Absensi';
+
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static function permission(): string
     {
@@ -33,97 +38,111 @@ class MeetingResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Detail Pertemuan')->schema([
-                    Forms\Components\Select::make('class_group_id')
-                        ->relationship('classGroup', 'name')
-                        ->label('Pilih Kelas')
-                        ->required()
-                        ->searchable()
-                        ->preload()
-                        ->live() // PENTING: Memicu form update saat kelas dipilih
-                        ->afterStateUpdated(function ($state, Forms\Set $set) {
-                            // Jika kelas kosong, kosongkan juga tabel siswa
-                            if (!$state) {
-                                $set('students_attendance', []);
-                                return;
-                            }
+                Forms\Components\Section::make('Detail Pertemuan')
+                    ->description('Pilih kelas dan tentukan jadwal pertemuan.')
+                    ->icon('heroicon-o-calendar')
+                    ->schema([
+                        Forms\Components\Select::make('class_group_id')
+                            ->relationship('classGroup', 'name')
+                            ->label('Pilih Kelas')
+                            ->required()
+                            ->searchable()
+                            ->preload()
+                            ->native(false)
+                            ->live()
+                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                if (! $state) {
+                                    $set('students_attendance', []);
+                                    return;
+                                }
 
-                            // Ambil siswa berdasarkan kelas yang dipilih
-                            $classGroup = \App\Features\Academic\Models\ClassGroup::find($state);
-                            
-                            $attendanceData = []; // Inisialisasi array penampung
-                            
-                            if ($classGroup && $classGroup->students) {
-                                // Looping untuk memasukkan semua siswa ke dalam repeater
+                                $classGroup = ClassGroup::find($state);
+
+                                if (! $classGroup || ! $classGroup->students) {
+                                    $set('students_attendance', []);
+                                    return;
+                                }
+
+                                $attendanceData = [];
+
                                 foreach ($classGroup->students as $student) {
                                     $attendanceData[] = [
                                         'user_id' => $student->id,
                                         'name' => $student->name,
-                                        // Pastikan value ini huruf kecil agar cocok dengan ENUM database
-                                        'status' => 'present', 
+                                        'status' => 'present',
                                     ];
                                 }
-                            }
 
-                            // Masukkan data ke Repeater
-                            $set('students_attendance', $attendanceData);
-                        }),
+                                $set('students_attendance', $attendanceData);
+                            }),
 
-                    Forms\Components\Hidden::make('user_id')
-                        ->default(fn () => Auth::id()),
-                    
-                    Forms\Components\TextInput::make('title')
-                        ->label('Topik / Materi')
-                        ->placeholder('Contoh: Makhrajul Huruf Ba')
-                        ->required()
-                        ->maxLength(255),
-                    
-                    Forms\Components\DatePicker::make('date')
-                        ->label('Tanggal Pertemuan')
-                        ->default(now())
-                        ->required(),
-                ])->columns(2),
+                        Forms\Components\DatePicker::make('date')
+                            ->label('Tanggal Pertemuan')
+                            ->default(now())
+                            ->required()
+                            ->native(false)
+                            ->displayFormat('d F Y')
+                            ->maxDate(now()->addYear()),
 
-                // TABEL ABSENSI SISWA MUNCUL DI SINI
+                        Forms\Components\Textarea::make('notes')
+                            ->label('Catatan Pertemuan (Opsional)')
+                            ->placeholder('Contoh: Kelas berjalan lancar, atau diganti hari lain.')
+                            ->rows(2)
+                            ->columnSpanFull(),
+
+                        Forms\Components\Hidden::make('user_id')
+                            ->default(fn () => Auth::id()),
+                        
+                        Forms\Components\Hidden::make('title')
+                            ->default('Pertemuan Rutin'),
+                    ])
+                    ->columns(2),
+
                 Forms\Components\Section::make('Daftar Kehadiran Santri')
+                    ->description('Tentukan status kehadiran setiap santri.')
+                    ->icon('heroicon-o-clipboard-document-check')
                     ->schema([
                         Forms\Components\Repeater::make('students_attendance')
                             ->hiddenLabel()
                             ->schema([
                                 Forms\Components\Hidden::make('user_id'),
-                                
+
                                 Forms\Components\TextInput::make('name')
                                     ->label('Nama Santri')
-                                    ->disabled() // Disable agar Ustad tidak bisa ganti nama santri
+                                    ->disabled()
                                     ->columnSpan(2),
 
-                                // Menggunakan ToggleButtons agar seperti pill/tombol warna-warni yang rapi
                                 Forms\Components\ToggleButtons::make('status')
-                                    ->label('Status')
+                                    ->label('Status Kehadiran')
                                     ->options([
-                                        // Key di sebelah kiri (huruf kecil) yang akan masuk ke database
-                                        'present' => 'Hadir',
-                                        'sick' => 'Sakit',
-                                        'permission'  => 'Izin',
-                                        'alpha' => 'Alpha',
+                                        'present'    => 'Hadir',
+                                        'sick'       => 'Sakit',
+                                        'permission' => 'Izin',
+                                        'alpha'      => 'Alpha',
                                     ])
                                     ->colors([
-                                        'present' => 'success',
-                                        'sick' => 'info',
-                                        'permission'  => 'warning',
-                                        'alpha' => 'danger',
+                                        'present'    => 'success',
+                                        'sick'       => 'info',
+                                        'permission' => 'warning',
+                                        'alpha'      => 'danger',
                                     ])
                                     ->inline()
                                     ->required()
                                     ->columnSpan(2),
                             ])
                             ->columns(4)
-                            ->addable(false) // Matikan tombol tambah baris
-                            ->deletable(false) // Matikan tombol hapus baris
-                            ->reorderable(false) // Matikan tombol geser
+                            ->addable(false)
+                            ->deletable(false)
+                            ->reorderable(false)
+                            ->defaultItems(0),
                     ])
-                    // Section ini hanya muncul kalau Ustad sudah milih kelas
-                    ->visible(fn (Forms\Get $get) => filled($get('class_group_id'))), 
+                    ->visible(fn (Forms\Get $get): bool => filled($get('class_group_id'))),
+
+                Forms\Components\Section::make('Belum Ada Kelas Terpilih')
+                    ->description('Silakan pilih kelas terlebih dahulu untuk menampilkan daftar kehadiran santri.')
+                    ->icon('heroicon-o-information-circle')
+                    ->schema([])
+                    ->visible(fn (Forms\Get $get): bool => ! filled($get('class_group_id'))),
             ]);
     }
 
@@ -131,44 +150,78 @@ class MeetingResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('classGroup.name')
-                    ->label('Kelas')
-                    ->sortable()
-                    ->searchable()
-                    ->badge()
-                    ->color('info'),
-
-                Tables\Columns\TextColumn::make('title')
-                    ->label('Materi')
-                    ->searchable(),
-
                 Tables\Columns\TextColumn::make('date')
+                    ->label('Tanggal Pertemuan')
                     ->date('d M Y')
-                    ->sortable(),
+                    ->description(fn (Meeting $record): string => 
+                        $record->date ? $record->date->translatedFormat('l') : '') 
+                    ->icon('heroicon-m-calendar')
+                    ->iconColor('primary')
+                    ->sortable()
+                    ->weight('bold'),
 
                 Tables\Columns\TextColumn::make('attendances_count')
                     ->counts('attendances')
-                    ->label('Jml Siswa')
-                    ->badge(),
+                    ->label('Hadir')
+                    ->badge()
+                    ->color('success')
+                    ->icon('heroicon-m-users'),
+
+                Tables\Columns\TextColumn::make('notes')
+                    ->label('Catatan Kelas')
+                    ->searchable()
+                    ->placeholder('Tidak ada catatan')
+                    ->wrap()
+                    ->limit(40)
+                    ->color('gray'),
 
                 Tables\Columns\TextColumn::make('teacher.name')
                     ->label('Pengajar')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->icon('heroicon-m-user-circle')
+                    ->placeholder('—')
+                    ->sortable(),
             ])
+            ->groups([
+                Group::make('classGroup.name')
+                    ->label('Kelas')
+                    ->collapsible(), 
+            ])
+            ->defaultGroup('classGroup.name')
+            
             ->filters([
-                Tables\Filters\SelectFilter::make('class_group_id')
-                    ->relationship('classGroup', 'name')
-                    ->label('Filter Kelas'),
+                Tables\Filters\Filter::make('date')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')->label('Dari Tanggal')->native(false),
+                        Forms\Components\DatePicker::make('until')->label('Sampai Tanggal')->native(false),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['from'], fn (Builder $q, $d) => $q->whereDate('date', '>=', $d))
+                            ->when($data['until'], fn (Builder $q, $d) => $q->whereDate('date', '<=', $d));
+                    })
+                    ->label('Rentang Tanggal'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make()
+                        ->label('Edit Jadwal & Absensi')
+                        ->color('warning'),
+                    
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Hapus Pertemuan')
+                        ->requiresConfirmation()
+                        ->modalHeading('Hapus Pertemuan?')
+                        ->modalDescription("Data absensi pada pertemuan ini akan dihapus permanen."),
+                ])
+                ->icon('heroicon-m-ellipsis-horizontal')
+                ->tooltip('Aksi'),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])])
+            ->defaultSort('date', 'desc')
+            ->striped()->paginated([10, 25, 50])->defaultPaginationPageOption(10)
+            ->emptyStateHeading('Belum Ada Pertemuan')
+            ->emptyStateDescription('Buat pertemuan pertama dengan klik tombol di atas.')
+            ->emptyStateIcon('heroicon-o-calendar-days');
     }
 
     public static function getRelations(): array
@@ -178,7 +231,7 @@ class MeetingResource extends Resource
         ];
     }
 
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
         $user = auth()->user();
@@ -190,46 +243,36 @@ class MeetingResource extends Resource
         return $query;
     }
 
+    // ==========================================================
+    // AUTHORIZATION (KHUSUS SUPERADMIN)
+    // ==========================================================
+
+    public static function canCreate(): bool
+    {
+        // Hanya Superadmin yang bisa membuat jadwal/absensi manual
+        return auth()->user()->role === 'superadmin';
+    }
+
     public static function canView($record): bool
     {
-        if (! static::canAccessAction('view')) {
-            return false;
-        }
-
+        if (! static::canAccessAction('view')) return false;
         $user = auth()->user();
         if ($user && $user->role === 'guru') {
             return (int) $record->classGroup?->teacher_id === (int) $user->id;
         }
-
         return true;
     }
 
     public static function canEdit($record): bool
     {
-        if (! static::canAccessAction('update')) {
-            return false;
-        }
-
-        $user = auth()->user();
-        if ($user && $user->role === 'guru') {
-            return (int) $record->classGroup?->teacher_id === (int) $user->id;
-        }
-
-        return true;
+        // Hanya Superadmin yang bisa mengedit absensi secara manual
+        return auth()->user()->role === 'superadmin';
     }
 
     public static function canDelete($record): bool
     {
-        if (! static::canAccessAction('delete')) {
-            return false;
-        }
-
-        $user = auth()->user();
-        if ($user && $user->role === 'guru') {
-            return (int) $record->classGroup?->teacher_id === (int) $user->id;
-        }
-
-        return true;
+        // Hanya Superadmin yang bisa menghapus absensi
+        return auth()->user()->role === 'superadmin';
     }
 
     public static function getPages(): array

@@ -37,11 +37,11 @@ class GradePipelineTest extends TestCase
             'tuition_fee' => 500000,
         ]);
 
-        $subject = Subject::create(['name' => 'Tahfidz', 'slug' => 'tahfidz']);
+        $subject = Subject::create(['name' => 'Tahfizh', 'slug' => 'tahfizh']);
 
         $class = ClassGroup::create([
-            'name' => 'Tahfidz A',
-            'slug' => 'tahfidz-a',
+            'name' => 'Tahfizh A',
+            'slug' => 'tahfizh-a',
             'subject_id' => $subject->id,
             'semester_id' => $semester->id,
             'teacher_id' => $teacher->id,
@@ -310,7 +310,7 @@ class GradePipelineTest extends TestCase
         ]);
 
         $subjectTahsin = Subject::create(['name' => 'Tahsin', 'slug' => 'tahsin']);
-        $subjectTahfidz = Subject::create(['name' => 'Tahfidz', 'slug' => 'tahfidz']);
+        $subjectTahfizh = Subject::create(['name' => 'Tahfizh', 'slug' => 'tahfizh']);
 
         $classTahsin = ClassGroup::create([
             'name' => 'Tahsin A',
@@ -323,16 +323,16 @@ class GradePipelineTest extends TestCase
         ]);
         $classTahsin->students()->attach($student->id);
 
-        $classTahfidz = ClassGroup::create([
-            'name' => 'Tahfidz B',
-            'slug' => 'tahfidz-b',
-            'subject_id' => $subjectTahfidz->id,
+        $classTahfizh = ClassGroup::create([
+            'name' => 'Tahfizh B',
+            'slug' => 'tahfizh-b',
+            'subject_id' => $subjectTahfizh->id,
             'semester_id' => $semester->id,
             'teacher_id' => $teacher->id,
             'class_type' => 'tilawah',
             'class_letter' => 'B',
         ]);
-        $classTahfidz->students()->attach($student->id);
+        $classTahfizh->students()->attach($student->id);
 
         // Class Tahsin: Assessment = 80, Evaluation = 80 -> Final = 80.0
         Assessment::create([
@@ -350,9 +350,9 @@ class GradePipelineTest extends TestCase
             'items' => [['score' => 80]],
         ]);
 
-        // Class Tahfidz: Assessment = 95, Evaluation = 95 -> Final = 95.0
+        // Class Tahfizh: Assessment = 95, Evaluation = 95 -> Final = 95.0
         Assessment::create([
-            'class_group_id' => $classTahfidz->id,
+            'class_group_id' => $classTahfizh->id,
             'user_id' => $student->id,
             'assessment_type' => 'ziyadah',
             'month' => 1,
@@ -360,19 +360,19 @@ class GradePipelineTest extends TestCase
             'data' => [['nilai' => 95]],
         ]);
         Evaluation::create([
-            'class_group_id' => $classTahfidz->id,
+            'class_group_id' => $classTahfizh->id,
             'user_id' => $student->id,
             'evaluation_number' => 1,
             'items' => [['score' => 95]],
         ]);
 
         $gradeTahsin = Grade::where('user_id', $student->id)->where('subject_id', $subjectTahsin->id)->first();
-        $gradeTahfidz = Grade::where('user_id', $student->id)->where('subject_id', $subjectTahfidz->id)->first();
+        $gradeTahfizh = Grade::where('user_id', $student->id)->where('subject_id', $subjectTahfizh->id)->first();
 
         $this->assertNotNull($gradeTahsin);
-        $this->assertNotNull($gradeTahfidz);
+        $this->assertNotNull($gradeTahfizh);
         $this->assertEquals(80.0, (float) $gradeTahsin->score);
-        $this->assertEquals(95.0, (float) $gradeTahfidz->score);
+        $this->assertEquals(95.0, (float) $gradeTahfizh->score);
     }
 
     public function test_grade_is_scoped_to_correct_semester(): void
@@ -911,10 +911,10 @@ class GradePipelineTest extends TestCase
             'is_active' => true,
             'tuition_fee' => 500000,
         ]);
-        $subject = Subject::create(['name' => 'Tahfidz', 'slug' => 'tahfidz']);
+        $subject = Subject::create(['name' => 'Tahfizh', 'slug' => 'tahfizh']);
         $class = ClassGroup::create([
-            'name' => 'Tahfidz A',
-            'slug' => 'tahfidz-a',
+            'name' => 'Tahfizh A',
+            'slug' => 'tahfizh-a',
             'subject_id' => $subject->id,
             'semester_id' => $semester->id,
             'teacher_id' => $teacher->id,

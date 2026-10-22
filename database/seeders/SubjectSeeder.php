@@ -14,7 +14,7 @@ class SubjectSeeder extends Seeder
             ['name' => 'Tahsin', 'slug' => 'tahsin'],
             ['name' => 'Murottal', 'slug' => 'murottal'],
             ['name' => 'Tilawah', 'slug' => 'tilawah'],
-            ['name' => 'Tahfidz', 'slug' => 'tahfidz'],
+            ['name' => 'Tahfizh', 'slug' => 'tahfizh'],
             ['name' => 'Tajwid', 'slug' => 'tajwid'],
         ];
 

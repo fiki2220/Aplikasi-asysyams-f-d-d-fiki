@@ -3,12 +3,14 @@
 namespace App\Features\Posts\Models;
 
 use App\Models\User;
+use App\Traits\OptimizesImages;   // ⭐ TAMBAHAN
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model
 {
     use HasFactory;
+    use OptimizesImages;           // ⭐ TAMBAHAN
 
     protected $fillable = [
         'user_id',
@@ -26,6 +28,19 @@ class Post extends Model
     protected $casts = [
         'published_at' => 'date',
         'is_published' => 'boolean',
+    ];
+
+    /**
+     * ⭐ Konfigurasi auto-convert WebP untuk kolom `image`.
+     * - quality: 85 (kualitas tinggi, mata tidak bisa bedakan)
+     * - max_width: 1200 (cukup untuk thumbnail & preview)
+     */
+    protected $optimizableImages = [
+        'image' => [
+            'disk'      => 'public',
+            'quality'   => 85,
+            'max_width' => 1200,
+        ],
     ];
 
     // Relasi: Berita ditulis oleh User

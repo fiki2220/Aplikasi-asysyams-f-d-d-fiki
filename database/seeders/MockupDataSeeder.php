@@ -46,9 +46,9 @@ class MockupDataSeeder extends Seeder
             'address' => 'Komplek Pondok Asy-Syams',
         ]);
 
-        $guruTahfidz = $this->user([
+        $guruTahfizh = $this->user([
             'name' => 'Ustadzah Siti Aminah',
-            'email' => 'guru.tahfidz@asy-syams.test',
+            'email' => 'guru.tahfizh@asy-syams.test',
             'role' => 'guru',
             'is_active' => true,
             'phone' => '081200000003',
@@ -152,22 +152,22 @@ class MockupDataSeeder extends Seeder
         $subjectMurottal = $this->subject('Murottal', 'murottal');
         $subjectTilawah = $this->subject('Tilawah', 'tilawah');
         $this->subject('Baca & Tulis', 'baca-tulis');
-        $this->subject('Tahfidz', 'tahfidz');
+        $this->subject('Tahfizh', 'tahfizh');
         $this->subject('Tajwid', 'tajwid');
 
         $kelasTahsin = $this->classGroup('Kelas Tahsin', $subjectTahsin, $semesterAktif, $guruTahsin, 'tahsin');
-        $kelasTahfidz = $this->classGroup('Kelas Murottal A', $subjectMurottal, $semesterAktif, $guruTahfidz, 'murottal', 'A');
+        $kelasTahfizh = $this->classGroup('Kelas Murottal A', $subjectMurottal, $semesterAktif, $guruTahfizh, 'murottal', 'A');
         $kelasTajwid = $this->classGroup('Kelas Tilawah A', $subjectTilawah, $semesterLalu, $guruTahsin, 'tilawah', 'A');
 
         $this->attachStudentsToClassGroup($kelasTahsin, $students->take(3)->all(), now());
-        $this->attachStudentsToClassGroup($kelasTahfidz, $students->slice(1, 3)->all(), now());
+        $this->attachStudentsToClassGroup($kelasTahfizh, $students->slice(1, 3)->all(), now());
         $this->attachStudentsToClassGroup($kelasTajwid, $students->all(), now()->subMonths(4));
 
         $meetings = collect([
             $this->meeting($kelasTahsin, $guruTahsin, 'Makharijul Huruf dan Sifat Huruf', '2026-07-08'),
             $this->meeting($kelasTahsin, $guruTahsin, "Latihan Mad Thabi'i dan Mad Wajib", '2026-07-15'),
-            $this->meeting($kelasTahfidz, $guruTahfidz, 'Setoran Hafalan Juz 30', '2026-07-09'),
-            $this->meeting($kelasTahfidz, $guruTahfidz, 'Murojaah Surat An-Naba', '2026-07-16'),
+            $this->meeting($kelasTahfizh, $guruTahfizh, 'Setoran Hafalan Juz 30', '2026-07-09'),
+            $this->meeting($kelasTahfizh, $guruTahfizh, 'Murojaah Surat An-Naba', '2026-07-16'),
         ]);
 
         $statuses = ['present', 'present', 'sick', 'permission', 'alpha'];
@@ -180,7 +180,7 @@ class MockupDataSeeder extends Seeder
             }
         }
 
-        foreach ([$kelasTahsin, $kelasTahfidz] as $classGroup) {
+        foreach ([$kelasTahsin, $kelasTahfizh] as $classGroup) {
             foreach ($classGroup->students as $student) {
                 foreach (['ziyadah', 'murojaah', 'tahsin'] as $type) {
                     $payload = [
@@ -259,11 +259,11 @@ class MockupDataSeeder extends Seeder
         }
 
         $this->siteSettings();
-        $this->posts($superadmin, $guruTahsin, $guruTahfidz);
+        $this->posts($superadmin, $guruTahsin, $guruTahfizh);
 
         $this->command?->info('Mockup data berhasil dibuat.');
         $this->command?->line('Akun demo password: Password123!');
-        $this->command?->line('superadmin@asy-syams.test, guru.tahsin@asy-syams.test, guru.tahfidz@asy-syams.test, siswa.ahmad@asy-syams.test');
+        $this->command?->line('superadmin@asy-syams.test, guru.tahsin@asy-syams.test, guru.tahfizh@asy-syams.test, siswa.ahmad@asy-syams.test');
     }
 
     private function user(array $data): User
@@ -428,7 +428,7 @@ class MockupDataSeeder extends Seeder
     {
         $settings = [
             'hero_title' => 'Membangun Generasi Qurani Berakhlak Mulia',
-            'hero_subtitle' => 'YPTQ Asy-Syams membina santri melalui tilawah, tahsin, tahfidz, adab, dan pembelajaran terarah.',
+            'hero_subtitle' => 'YPTQ Asy-Syams membina santri melalui tilawah, tahsin, tahfizh, adab, dan pembelajaran terarah.',
             'spmb_deadline' => '2026-07-31 23:59:00',
             'contact_address' => 'Jl. Pendidikan Qurani No. 23, Indonesia',
             'contact_phone' => '0812-0000-2323',
@@ -441,7 +441,7 @@ class MockupDataSeeder extends Seeder
         }
     }
 
-    private function posts(User $superadmin, User $guruTahsin, User $guruTahfidz): void
+    private function posts(User $superadmin, User $guruTahsin, User $guruTahfizh): void
     {
         $posts = [
             [
@@ -459,8 +459,8 @@ class MockupDataSeeder extends Seeder
                 'published_at' => now()->subDays(5),
             ],
             [
-                'user_id' => $guruTahfidz->id,
-                'title' => 'Murojaah Pekanan Kelas Tahfidz',
+                'user_id' => $guruTahfizh->id,
+                'title' => 'Murojaah Pekanan Kelas Tahfizh',
                 'category' => 'Prestasi',
                 'content' => '<p>Kegiatan murojaah pekanan menjadi sarana menjaga hafalan dan melatih kedisiplinan santri dalam menyetorkan hafalan.</p>',
                 'published_at' => now()->subDays(2),

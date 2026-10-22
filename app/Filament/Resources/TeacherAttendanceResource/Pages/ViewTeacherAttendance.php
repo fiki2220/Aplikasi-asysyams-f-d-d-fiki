@@ -13,7 +13,15 @@ class ViewTeacherAttendance extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\EditAction::make(),
+            Actions\EditAction::make()
+                ->label('Edit')
+                ->icon('heroicon-o-pencil-square')
+                ->color('warning'),
         ];
+    }
+
+    public function getTitle(): string
+    {
+        return "Detail Absensi • {$this->record->user?->name}";
     }
 }

@@ -1,10 +1,35 @@
 @php
     $className = $classGroup?->name ?? '-';
-    $subjectName = $classGroup?->subject?->name;
     $semesterName = $classGroup?->semester?->name;
-    $classDisplay = collect([$className, $subjectName, $semesterName])->filter()->implode(' / ');
+    $classDisplay = collect([$className, $semesterName])->filter()->implode(' / ');
+
     $displayRows = collect($rows);
-    $emptyRows = max(0, 22 - $displayRows->count());
+    $count = $displayRows->count();
+
+    // ⭐ LOGIKA BARIS KOSONG
+    if ($count >= 15) {
+        $emptyRows = 0;
+        $isDataEmpty = false;
+    } elseif ($count === 0) {
+        $emptyRows = 15;
+        $isDataEmpty = true;
+    } else {
+        $emptyRows = 15 - $count;
+        $isDataEmpty = false;
+    }
+
+    $colWidths = $colWidths ?? [
+        'no'      => '4%',
+        'date'    => '9%',
+        'reading' => '21%',
+        'mark'    => '3%',
+        'sign'    => '6%',
+    ];
+
+    $markNum = (int) filter_var($colWidths['mark'], FILTER_SANITIZE_NUMBER_INT);
+    $unit    = preg_replace('/[0-9.]/', '', $colWidths['mark']) ?: '%';
+    $markTotal3 = ($markNum * 3) . $unit;
+    $markTotal2 = ($markNum * 2) . $unit;
 @endphp
 
 <div class="student-control-sheet">
@@ -44,59 +69,66 @@
 
     <table class="control-table">
         <colgroup>
-            <col class="col-no">
-            <col class="col-date">
-            <col class="col-reading">
-            <col class="col-mark">
-            <col class="col-mark">
-            <col class="col-mark">
-            <col class="col-reading">
-            <col class="col-mark">
-            <col class="col-mark">
-            <col class="col-reading">
-            <col class="col-sign">
+            <col style="width: {{ $colWidths['no'] }}">
+            <col style="width: {{ $colWidths['date'] }}">
+            <col style="width: {{ $colWidths['reading'] }}">
+            <col style="width: {{ $colWidths['mark'] }}">
+            <col style="width: {{ $colWidths['mark'] }}">
+            <col style="width: {{ $colWidths['mark'] }}">
+            <col style="width: {{ $colWidths['reading'] }}">
+            <col style="width: {{ $colWidths['mark'] }}">
+            <col style="width: {{ $colWidths['mark'] }}">
+            <col style="width: {{ $colWidths['reading'] }}">
+            <col style="width: {{ $colWidths['sign'] }}">
         </colgroup>
+
         <thead>
             <tr>
-                <th rowspan="2">NO</th>
-                <th rowspan="2">TANGGAL</th>
-                <th rowspan="2">ZIYADAH</th>
-                <th colspan="3">KET</th>
-                <th rowspan="2">MUROJAAH</th>
-                <th colspan="2">KET</th>
-                <th rowspan="2">TAHSIN</th>
-                <th rowspan="2">TTD</th>
+                <th rowspan="2" style="width: {{ $colWidths['no'] }};">NO</th>
+                <th rowspan="2" style="width: {{ $colWidths['date'] }};">TANGGAL</th>
+                <th rowspan="2" style="width: {{ $colWidths['reading'] }};">ZIYADAH</th>
+                <th colspan="3" style="width: {{ $markTotal3 }};">KET</th>
+                <th rowspan="2" style="width: {{ $colWidths['reading'] }};">MUROJAAH</th>
+                <th colspan="2" style="width: {{ $markTotal2 }};">KET</th>
+                <th rowspan="2" style="width: {{ $colWidths['reading'] }};">TAHSIN</th>
+                <th rowspan="2" style="width: {{ $colWidths['sign'] }};">TTD</th>
             </tr>
             <tr>
-                <th>L</th>
-                <th>C</th>
-                <th>TL</th>
-                <th>B</th>
-                <th>K</th>
+                <th style="width: {{ $colWidths['mark'] }};">L</th>
+                <th style="width: {{ $colWidths['mark'] }};">C</th>
+                <th style="width: {{ $colWidths['mark'] }};">TL</th>
+                <th style="width: {{ $colWidths['mark'] }};">B</th>
+                <th style="width: {{ $colWidths['mark'] }};">K</th>
             </tr>
         </thead>
+
         <tbody>
             @foreach ($displayRows as $row)
                 <tr>
                     <td class="text-center">{{ $row['number'] }}</td>
-                    <td class="text-center">{{ $row['date']?->format('d/m/Y') ?? '-' }}</td>
+                    <td class="text-center">
+                        {{ $row['date'] ? $row['date']->format('d/m/Y') : '' }}
+                    </td>
                     <td>{{ $row['ziyadah'] ?: '' }}</td>
-                    <td class="text-center mark-cell">{{ $row['ziyadah_score'] === 'L' ? 'V' : '' }}</td>
-                    <td class="text-center mark-cell">{{ $row['ziyadah_score'] === 'C' ? 'V' : '' }}</td>
-                    <td class="text-center mark-cell">{{ $row['ziyadah_score'] === 'TL' ? 'V' : '' }}</td>
+                    <td class="text-center mark-cell">{{ $row['ziyadah_score'] === 'L' ? '✓' : '' }}</td>
+                    <td class="text-center mark-cell">{{ $row['ziyadah_score'] === 'C' ? '✓' : '' }}</td>
+                    <td class="text-center mark-cell">{{ $row['ziyadah_score'] === 'TL' ? '✓' : '' }}</td>
                     <td>{{ $row['murojaah'] ?: '' }}</td>
-                    <td class="text-center mark-cell">{{ $row['murojaah_score'] === 'B' ? 'V' : '' }}</td>
-                    <td class="text-center mark-cell">{{ $row['murojaah_score'] === 'K' ? 'V' : '' }}</td>
+                    <td class="text-center mark-cell">{{ $row['murojaah_score'] === 'B' ? '✓' : '' }}</td>
+                    <td class="text-center mark-cell">{{ $row['murojaah_score'] === 'K' ? '✓' : '' }}</td>
                     <td>{{ $row['tahsin'] ?: '' }}</td>
-                    <td></td>
+
+                    {{-- ⭐ Kolom TTD — inisial pengajar per baris --}}
+                    <td class="text-center ttd-initials" title="{{ $row['creator_name'] ?? '' }}">
+                        {{ $row['creator_initials'] ?? '—' }}
+                    </td>
                 </tr>
             @endforeach
 
-            @if ($displayRows->isEmpty())
+            @if ($isDataEmpty)
                 <tr>
                     <td colspan="11" class="empty-state">Belum ada data assessment untuk santri ini.</td>
                 </tr>
-                @php $emptyRows = 21; @endphp
             @endif
 
             @for ($i = 0; $i < $emptyRows; $i++)
@@ -117,20 +149,48 @@
         </tbody>
     </table>
 
+    {{-- ⭐ KETERANGAN TTD --}}
+    @if (! empty($creatorLegend))
+        <div class="creator-legend">
+            <strong>Keterangan TTD:</strong>
+            <ul>
+                @foreach ($creatorLegend as $initials => $name)
+                    <li><strong>{{ $initials }}</strong> = {{ $name }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    {{-- ⭐ CATATAN PEMBELAJARAN --}}
     <div class="summary-section note-section">
         <div class="summary-title">CATATAN PEMBELAJARAN</div>
         <table class="summary-table note-table">
             <thead>
                 <tr>
-                    <th>Tanggal</th>
+                    <th style="width: 12%;">Tanggal</th>
                     <th>Catatan</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse ($learningNotes as $learningNote)
+                    @php $notesList = $learningNote['notes'] ?? []; @endphp
                     <tr>
-                        <td class="text-center">{{ $learningNote['date']?->format('d/m/Y') ?? '-' }}</td>
-                        <td>{{ $learningNote['note'] }}</td>
+                        <td class="text-center" style="vertical-align: top;">
+                            {{ $learningNote['date']?->format('d/m/Y') ?? '—' }}
+                        </td>
+                        <td style="vertical-align: top;">
+                            @if (count($notesList) > 1)
+                                @foreach ($notesList as $note)
+                                    <div style="margin-bottom: 2px;">
+                                        &bull; {{ $note }}
+                                    </div>
+                                @endforeach
+                            @elseif (count($notesList) === 1)
+                                {{ $notesList[0] }}
+                            @else
+                                {{ $learningNote['note'] ?? '—' }}
+                            @endif
+                        </td>
                     </tr>
                 @empty
                     <tr>
@@ -144,44 +204,44 @@
     <div class="notes">
         <div>Keterangan:</div>
         <ol>
-            <li>Beri tanda centang (V) pada kolom keterangan.</li>
+            <li>Beri tanda centang (✓) pada kolom keterangan.</li>
             <li>Kolom Ziyadah: Lancar (L), Cukup (C), Tidak Lancar (TL).</li>
             <li>Kolom Murojaah: Baik (B), Kurang (K).</li>
         </ol>
     </div>
 
+    {{-- ⭐ EVALUASI --}}
     <div class="summary-section">
         <div class="summary-title">EVALUASI</div>
         <table class="summary-table evaluation-table">
             <thead>
                 <tr>
-                    <th>Evaluasi Ke</th>
-                    <th>Surah</th>
-                    <th>Lagu</th>
-                    <th>Catatan/Item</th>
-                    <th>Nilai</th>
-                    <th>Status</th>
+                    <th style="width: 22%;">Surah / Ayat</th>
+                    <th style="width: 22%;">Lagu / Irama</th>
+                    <th style="width: 30%;">Catatan / Item</th>
+                    <th style="width: 10%;">Nilai</th>
+                    <th style="width: 16%;">Status</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse ($evaluationSummary as $evaluation)
                     <tr>
-                        <td class="text-center">{{ $evaluation['evaluation_number'] }}</td>
-                        <td>{{ $evaluation['surah_name'] ?? '-' }}</td>
-                        <td>{{ $evaluation['song_name'] ?? '-' }}</td>
-                        <td>{{ $evaluation['item'] }}</td>
-                        <td class="text-center">{{ $evaluation['score'] }}</td>
-                        <td class="text-center">{{ $evaluation['status'] }}</td>
+                        <td>{{ $evaluation['surah_name'] ?? '—' }}</td>
+                        <td>{{ $evaluation['song_name'] ?? '—' }}</td>
+                        <td>{{ $evaluation['item'] ?? '—' }}</td>
+                        <td class="text-center">{{ $evaluation['score'] ?? '—' }}</td>
+                        <td class="text-center">{{ $evaluation['status'] ?? '—' }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="empty-state">Belum ada data evaluasi.</td>
+                        <td colspan="5" class="empty-state">Belum ada data evaluasi.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
+    {{-- ⭐ REKAP ABSENSI --}}
     <div class="summary-section">
         <div class="summary-title">REKAP ABSENSI</div>
         <table class="summary-table attendance-table">

@@ -12,11 +12,11 @@ use Illuminate\View\View;
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Display the login view.
+     * Display the students login view.
      */
     public function create(): View
     {
-        return view('auth.login');
+        return view('auth.students-login');
     }
 
     /**

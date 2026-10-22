@@ -10,91 +10,43 @@ use App\Features\Payments\Models\Payment;
 use App\Features\Grades\Models\Grade;
 use App\Features\Grades\Models\Assessment;
 use App\Features\Grades\Models\Evaluation;
+use App\Features\Grades\Models\CharacterAssessment; // ⭐ TAMBAHAN
 use App\Features\Meetings\Models\Attendance;
 use App\Features\Meetings\Models\Meeting;
 use App\Features\Academic\Models\ClassGroup;
 use App\Features\Permissions\Models\RolePermission;
 use App\Features\TeacherAttendances\Models\TeacherAttendance;
 
-// --- 1. TAMBAHAN IMPORT FILAMENT ---
+// ── Filament ──────────────────────────────────────────────
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 
-// --- 2. TAMBAHKAN implements FilamentUser DI SINI ---
 class User extends Authenticatable implements FilamentUser
 {
     use HasFactory, Notifiable;
 
+    // ==========================================================
+    // KONSTANTA — Permissions & Fallback Routes Filament
+    // ==========================================================
+
     public const PANEL_PERMISSIONS = [
         'dashboard.view',
-        'users.view',
-        'users.create',
-        'users.update',
-        'users.delete',
-        'users.manage',
-        'spmb.view',
-        'spmb.create',
-        'spmb.update',
-        'spmb.delete',
-        'spmb.approve',
-        'spmb.manage',
-        'classes.view',
-        'classes.create',
-        'classes.update',
-        'classes.delete',
-        'classes.manage',
-        'semesters.view',
-        'semesters.create',
-        'semesters.update',
-        'semesters.delete',
-        'semesters.manage',
-        'meetings.view',
-        'meetings.create',
-        'meetings.update',
-        'meetings.delete',
-        'meetings.manage',
-        'attendances.view',
-        'attendances.create',
-        'attendances.update',
-        'attendances.delete',
-        'attendances.manage',
-        'teacher-attendances.view',
-        'teacher-attendances.create',
-        'teacher-attendances.update',
-        'teacher-attendances.delete',
-        'teacher-attendances.manage',
-        'teacher-attendances.check-in',
-        'teacher-attendances.report',
-        'assessments.view',
-        'assessments.create',
-        'assessments.update',
-        'assessments.delete',
-        'assessments.manage',
-        'evaluations.view',
-        'evaluations.create',
-        'evaluations.update',
-        'evaluations.delete',
-        'evaluations.manage',
-        'grades.view',
-        'grades.create',
-        'grades.update',
-        'grades.delete',
-        'grades.manage',
-        'reports.view',
-        'reports.download',
-        'payments.view',
-        'payments.create',
-        'payments.update',
-        'payments.delete',
-        'payments.manage',
-        'posts.view',
-        'posts.create',
-        'posts.update',
-        'posts.delete',
-        'posts.manage',
-        'settings.view',
-        'settings.update',
-        'settings.manage',
+        'users.view', 'users.create', 'users.update', 'users.delete', 'users.manage',
+        'spmb.view', 'spmb.create', 'spmb.update', 'spmb.delete', 'spmb.approve', 'spmb.manage',
+        'classes.view', 'classes.create', 'classes.update', 'classes.delete', 'classes.manage',
+        'semesters.view', 'semesters.create', 'semesters.update', 'semesters.delete', 'semesters.manage',
+        'meetings.view', 'meetings.create', 'meetings.update', 'meetings.delete', 'meetings.manage',
+        'attendances.view', 'attendances.create', 'attendances.update', 'attendances.delete', 'attendances.manage',
+        'teacher-attendances.view', 'teacher-attendances.create', 'teacher-attendances.update',
+        'teacher-attendances.delete', 'teacher-attendances.manage',
+        'teacher-attendances.check-in', 'teacher-attendances.report',
+        'assessments.view', 'assessments.create', 'assessments.update', 'assessments.delete', 'assessments.manage',
+        'evaluations.view', 'evaluations.create', 'evaluations.update', 'evaluations.delete', 'evaluations.manage',
+        'grades.view', 'grades.create', 'grades.update', 'grades.delete', 'grades.manage',
+        'reports.view', 'reports.download',
+        'payments.view', 'payments.create', 'payments.update', 'payments.delete', 'payments.manage',
+        'posts.view', 'posts.create', 'posts.update', 'posts.delete', 'posts.manage',
+        'settings.view', 'settings.update', 'settings.manage',
     ];
 
     public const FILAMENT_FALLBACK_ROUTES = [
@@ -113,7 +65,7 @@ class User extends Authenticatable implements FilamentUser
         'evaluations.manage' => 'filament.admin.resources.evaluations.index',
         'grades.view' => 'filament.admin.resources.grades.index',
         'grades.manage' => 'filament.admin.resources.grades.index',
-        'reports.view' => 'filament.admin.resources.raport.index',
+        'reports.view' => 'filament.admin.resources.rapor.index',
         'payments.view' => 'filament.admin.resources.payments.index',
         'payments.manage' => 'filament.admin.resources.payments.index',
         'posts.view' => 'filament.admin.resources.posts.index',
@@ -128,33 +80,61 @@ class User extends Authenticatable implements FilamentUser
         'users.manage' => 'filament.admin.resources.users.index',
     ];
 
+    // ==========================================================
+    // MASS ASSIGNMENT — Daftar kolom yang boleh diisi massal
+    // ==========================================================
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
+     * ⚠️ PENTING: Semua kolom PPDB WAJIB ada di sini.
+     *    Kalau tidak, register akan error MassAssignmentException.
      */
     protected $fillable = [
+        // ── Akun dasar ─────────────────────────────────
         'name',
         'email',
         'password',
-        'role',         // superadmin, guru, student
-        'nisn',         // Khusus siswa
-        'phone',
-        'address',
-        'is_active',    // Status aktif/tidak
-        'gender',
+        'role',          // superadmin | guru | student
+        'is_active',     // status approve
 
-        // --- TAMBAHAN DATA PPDB (WAJIB ADA DISINI) ---
-        'grade_level',   // Jenjang (SD/SMP/SMA)
-        'birth_date',    // Tanggal Lahir
-        'mother_name',   // Nama Ibu
-        'school_origin', // Asal Sekolah
+        // ── Data Santri (PPDB) ─────────────────────────
+        'nisn',
+        'gender',
+        'birth_place',
+        'birth_date',
+        'phone',
+
+        // ── Orang Tua / Wali ───────────────────────────
+        'father_name',
+        'mother_name',
+        'parent_name',
+        'parent_phone',
+
+        // ── Akademik ───────────────────────────────────
+        'grade_level',
+        'school_origin',
+        'address',
+
+        // ── Dokumen Persyaratan PPDB ───────────────────
+        'file_kk',
+        'file_akta',
+        'file_ijazah',
+        'file_foto',
+
+        // ── Program & Persetujuan ──────────────────────
+        'program',
+        'terms_accepted_at',
+
+        // ── Data Guru / Staff ──────────────────────────
+        'nip',
+        'position',
+        'subject',
+
+        // ── Profil ─────────────────────────────────────
+        'profile_photo',
+        'profile_photo_path',
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
+     * Field yang disembunyikan saat serialization (JSON).
      */
     protected $hidden = [
         'password',
@@ -162,49 +142,53 @@ class User extends Authenticatable implements FilamentUser
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * Casting tipe data kolom.
      */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_active' => 'boolean',
-            'birth_date' => 'date', // Agar otomatis jadi object Date (bukan string)
+            'is_active'         => 'boolean',
+            'birth_date'        => 'date',
+            'terms_accepted_at' => 'datetime',
+            // 'password' => 'hashed',   // ← JANGAN aktifkan selama controller pakai Hash::make()
         ];
     }
 
-    // --- RELASI UNTUK SISWA ---
+    // ==========================================================
+    // RELASI — SISWA
+    // ==========================================================
 
-    // Siswa punya banyak nilai
     public function grades()
     {
         return $this->hasMany(Grade::class);
     }
 
-    // Siswa punya banyak pembayaran
     public function payments()
     {
         return $this->hasMany(Payment::class);
     }
 
-    // Siswa punya banyak absensi
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
     }
 
-    // --- RELASI UNTUK GURU ---
+    // ⭐ TAMBAHAN: Relasi Aspek Karakter
+    public function characterAssessments()
+    {
+        return $this->hasMany(CharacterAssessment::class, 'user_id');
+    }
 
-    // Ustad membuat banyak pertemuan
+    // ==========================================================
+    // RELASI — GURU
+    // ==========================================================
+
     public function teachingMeetings()
     {
         return $this->hasMany(Meeting::class, 'user_id');
     }
 
-    // Ustad mengajar banyak kelas
     public function classGroupsAsTeacher()
     {
         return $this->hasMany(ClassGroup::class, 'teacher_id');
@@ -220,9 +204,10 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(TeacherAttendance::class, 'created_by');
     }
 
-    // --- RELASI UNTUK SANTRI ---
+    // ==========================================================
+    // RELASI — SANTRI
+    // ==========================================================
 
-    // Santri berada di banyak kelas
     public function classGroups()
     {
         return $this->belongsToMany(ClassGroup::class, 'class_group_student', 'user_id', 'class_group_id')
@@ -231,17 +216,138 @@ class User extends Authenticatable implements FilamentUser
             ->withTimestamps();
     }
 
-    // Santri punya banyak penilaian
     public function assessments()
     {
         return $this->hasMany(Assessment::class);
     }
 
-    // Santri punya banyak evaluasi
     public function evaluations()
     {
         return $this->hasMany(Evaluation::class);
     }
+
+    // ==========================================================
+    // SCOPES — Query helper
+    // ==========================================================
+
+    public function scopeOfRole($query, string $role)
+    {
+        return $query->where('role', $role);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('is_active', false);
+    }
+
+    public function scopeStudents($query)
+    {
+        return $query->where('role', 'student');
+    }
+
+    public function scopeTeachers($query)
+    {
+        return $query->where('role', 'guru');
+    }
+
+    // ==========================================================
+    // ACCESSOR — Virtual attribute
+    // ==========================================================
+
+    public function getParentFullNameAttribute(): string
+    {
+        return collect([$this->father_name, $this->mother_name])
+            ->filter()
+            ->implode(' & ');
+    }
+
+    public function getAgeAttribute(): ?int
+    {
+        return $this->birth_date
+            ? $this->birth_date->age
+            : null;
+    }
+
+    public function getProfilePhotoUrlAttribute(): string
+    {
+        if ($this->profile_photo_path) {
+            return \Illuminate\Support\Facades\Storage::url($this->profile_photo_path);
+        }
+
+        if ($this->profile_photo) {
+            return \Illuminate\Support\Facades\Storage::url($this->profile_photo);
+        }
+
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=166534&color=fff';
+    }
+
+    // ==========================================================
+    // ACCESSOR — Dokumen PPDB (via Route aman)
+    // ==========================================================
+
+    protected function buildPpdbFileUrl(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        $relative = str_replace('ppdb-documents/', '', $path);
+
+        return route('ppdb.file', ['path' => $relative]);
+    }
+
+    public function getFileKkUrlAttribute(): ?string
+    {
+        return $this->buildPpdbFileUrl($this->file_kk);
+    }
+
+    public function getFileAktaUrlAttribute(): ?string
+    {
+        return $this->buildPpdbFileUrl($this->file_akta);
+    }
+
+    public function getFileIjazahUrlAttribute(): ?string
+    {
+        return $this->buildPpdbFileUrl($this->file_ijazah);
+    }
+
+    public function getFileFotoUrlAttribute(): ?string
+    {
+        return $this->buildPpdbFileUrl($this->file_foto);
+    }
+
+    // ==========================================================
+    // HELPER — Cek role
+    // ==========================================================
+
+    public function isSuperadmin(): bool
+    {
+        return $this->role === 'superadmin';
+    }
+
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, ['superadmin', 'admin'], true);
+    }
+
+    public function isTeacher(): bool
+    {
+        return $this->role === 'guru';
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->role === 'student';
+    }
+
+    // ==========================================================
+    // PERMISSIONS
+    // ==========================================================
 
     public function hasAccess(string $permission): bool
     {
@@ -300,7 +406,10 @@ class User extends Authenticatable implements FilamentUser
         return null;
     }
 
-    // --- 3. FUNGSI WAJIB FILAMENT UNTUK IZIN MASUK ---
+    // ==========================================================
+    // FILAMENT — Kontrol akses panel admin
+    // ==========================================================
+
     public function canAccessPanel(Panel $panel): bool
     {
         if ($this->role === 'superadmin') {

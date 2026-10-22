@@ -76,7 +76,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         @php
             $tahsinCount = $assessments->where('assessment_type', 'tahsin')->count();
-            $tahfidzCount = $assessments->where('assessment_type', 'tahfidz')->count();
+            $tahfizhCount = $assessments->where('assessment_type', 'tahfizh')->count();
             $tajwidCount = $assessments->where('assessment_type', 'tajwid')->count();
         @endphp
 
@@ -87,8 +87,8 @@
         </div>
 
         <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
-            <h3 class="text-lg font-bold text-gray-900 mb-2">Tahfidz</h3>
-            <p class="text-3xl font-bold text-yellow-600">{{ $tahfidzCount }}</p>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Tahfizh</h3>
+            <p class="text-3xl font-bold text-yellow-600">{{ $tahfizhCount }}</p>
             <p class="text-sm text-gray-600 mt-2">Data Penilaian</p>
         </div>
 
@@ -100,7 +100,7 @@
     </div>
 
     <!-- Detail Tables by Assessment Type -->
-    @foreach (['tahsin' => 'Tahsin', 'tahfidz' => 'Tahfidz', 'tajwid' => 'Tajwid'] as $key => $label)
+    @foreach (['tahsin' => 'Tahsin', 'tahfizh' => 'Tahfizh', 'tajwid' => 'Tajwid'] as $key => $label)
         @php
             $typeAssessments = $assessments->where('assessment_type', $key);
         @endphp

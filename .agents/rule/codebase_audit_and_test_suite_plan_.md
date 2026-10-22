@@ -43,7 +43,7 @@ Berdasarkan eksplorasi awal kode sumber, berikut adalah pemetaan 8 dugaan bug ya
 
 | Kode        | Area                               | Temuan Kode Nyata (*Source Code Inspection*)                                                                                                                                                                                                                                                                                                                   | Status Awal         |
 | ----------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| **A** | Assessment Type Mismatch           | Migration`2025_11_25_000002_create_assessments_table.php` menggunakan enum `['ziyadah', 'murojaah', 'tahsin', 'tilawah']`, sedangkan `AssessmentResource.php` menyediakan pilihan `['tahsin', 'tahfidz', 'tajwid']`. Nilai `tahfidz` dan `tajwid` akan gagal disimpan ke DB.                                                                         | **CONFIRMED** |
+| **A** | Assessment Type Mismatch           | Migration`2025_11_25_000002_create_assessments_table.php` menggunakan enum `['ziyadah', 'murojaah', 'tahsin', 'tilawah']`, sedangkan `AssessmentResource.php` menyediakan pilihan `['tahsin', 'tahfizh', 'tajwid']`. Nilai `tahfizh` dan `tajwid` akan gagal disimpan ke DB.                                                                         | **CONFIRMED** |
 | **B** | Assessment Month/Year Mismatch     | Model`Assessment` mencantumkan `month` dan `year` dalam `$fillable`, dan form `AssessmentResource` mengirim field `month` & `year`. Namun migrasi `assessments` **TIDAK MEMILIKI** kolom `month` maupun `year`.                                                                                                                        | **CONFIRMED** |
 | **C** | Active Semester Invariant          | `SemesterResource.php` memiliki label komentar *"(Logic nanti)"* dan model `Semester` tidak memiliki boot hook/constraint untuk mencegah lebih dari satu semester aktif (`is_active = true`).                                                                                                                                                            | **CONFIRMED** |
 | **D** | Payment Status Inconsistency       | `MidtransService.php` mengubah status pembayaran menjadi `'paid'` saat capture/settlement. Namun Filament `PaymentResource` dan `PaymentsRelationManager` hanya mendefinisikan opsi `'pending'`, `'success'`, `'failed'`. Akibatnya pembayaran berstatus `'paid'` menampilkan badge abu-abu dan tidak tersaring pada filter lunas (`success`). | **CONFIRMED** |
@@ -77,7 +77,7 @@ flowchart TD
 
 #### [NEW] `tests/Feature/Grades/AssessmentSchemaContractTest.php`
 
-- Memverifikasi apakah nilai `tahfidz` dan `tajwid` (opsi di `AssessmentResource`) dapat disimpan ke tabel `assessments`.
+- Memverifikasi apakah nilai `tahfizh` dan `tajwid` (opsi di `AssessmentResource`) dapat disimpan ke tabel `assessments`.
 - Memverifikasi bahwa enum database hanya mengizinkan `ziyadah`, `murojaah`, `tahsin`, `tilawah`.
 
 #### [NEW] `tests/Feature/Grades/AssessmentDatabaseContractTest.php`

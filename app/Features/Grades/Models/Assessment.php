@@ -13,6 +13,7 @@ class Assessment extends Model
     protected $fillable = [
         'user_id',
         'class_group_id',
+        'created_by',           // ⭐ BARU: pengajar yang input
         'assessment_type',
         'month',
         'year',
@@ -33,5 +34,11 @@ class Assessment extends Model
     public function classGroup()
     {
         return $this->belongsTo(\App\Features\Academic\Models\ClassGroup::class);
+    }
+
+    // ⭐ BARU: Relasi ke pengajar yang input
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

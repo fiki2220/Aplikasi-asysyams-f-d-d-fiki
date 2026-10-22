@@ -23,8 +23,8 @@ class Payment extends Model
     ];
 
     protected $casts = [
-        'payment_detail' => 'array', // Agar data JSON otomatis jadi Array PHP
-        'amount' => 'decimal:2',
+        'payment_detail' => 'array',
+        'amount'         => 'decimal:2',
     ];
 
     // Pembayaran milik siswa siapa?

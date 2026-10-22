@@ -150,11 +150,11 @@
         </div>
 
         <div class="stat-box">
-            <h3>Tahfidz</h3>
-            <div class="stat-item">📊 Total: <strong>{{ $assessments->where('assessment_type', 'tahfidz')->count() }}</strong></div>
-            <div class="stat-item">✓ Lancar: <strong>{{ $assessments->where('assessment_type', 'tahfidz')->filter(fn($a) => $a->data && collect($a->data)->where('nilai', 'L')->count() > 0)->count() }}</strong></div>
-            <div class="stat-item">~ Cukup: <strong>{{ $assessments->where('assessment_type', 'tahfidz')->filter(fn($a) => $a->data && collect($a->data)->where('nilai', 'C')->count() > 0)->count() }}</strong></div>
-            <div class="stat-item">✗ Tidak Lancar: <strong>{{ $assessments->where('assessment_type', 'tahfidz')->filter(fn($a) => $a->data && collect($a->data)->where('nilai', 'TL')->count() > 0)->count() }}</strong></div>
+            <h3>Tahfizh</h3>
+            <div class="stat-item">📊 Total: <strong>{{ $assessments->where('assessment_type', 'tahfizh')->count() }}</strong></div>
+            <div class="stat-item">✓ Lancar: <strong>{{ $assessments->where('assessment_type', 'tahfizh')->filter(fn($a) => $a->data && collect($a->data)->where('nilai', 'L')->count() > 0)->count() }}</strong></div>
+            <div class="stat-item">~ Cukup: <strong>{{ $assessments->where('assessment_type', 'tahfizh')->filter(fn($a) => $a->data && collect($a->data)->where('nilai', 'C')->count() > 0)->count() }}</strong></div>
+            <div class="stat-item">✗ Tidak Lancar: <strong>{{ $assessments->where('assessment_type', 'tahfizh')->filter(fn($a) => $a->data && collect($a->data)->where('nilai', 'TL')->count() > 0)->count() }}</strong></div>
         </div>
 
         <div class="stat-box">
@@ -210,9 +210,9 @@
         </table>
     @endif
 
-    <!-- Tahfidz Table -->
-    @if ($assessments->where('assessment_type', 'tahfidz')->count() > 0)
-        <div class="section-title">PENILAIAN TAHFIDZ</div>
+    <!-- Tahfizh Table -->
+    @if ($assessments->where('assessment_type', 'tahfizh')->count() > 0)
+        <div class="section-title">PENILAIAN TAHFIZH</div>
         <table>
             <thead>
                 <tr>
@@ -227,7 +227,7 @@
             </thead>
             <tbody>
                 @php $no = 1; @endphp
-                @foreach ($assessments->where('assessment_type', 'tahfidz') as $item)
+                @foreach ($assessments->where('assessment_type', 'tahfizh') as $item)
                     @if ($item->data)
                         @foreach ($item->data as $data)
                             <tr>

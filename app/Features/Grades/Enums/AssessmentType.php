@@ -8,7 +8,7 @@ enum AssessmentType: string
     case Murojaah = 'murojaah';
     case Tahsin = 'tahsin';
     case Tilawah = 'tilawah';
-    case Tahfidz = 'tahfidz';
+    case Tahfizh = 'tahfizh';
     case Tajwid = 'tajwid';
 
     public function label(): string
@@ -18,7 +18,7 @@ enum AssessmentType: string
             self::Murojaah => 'Muroja\'ah (Pengulangan Hafalan)',
             self::Tahsin => 'Tahsin (Perbaikan Bacaan)',
             self::Tilawah => 'Tilawah (Kelancaran Membaca)',
-            self::Tahfidz => 'Tahfidz (Hafalan Al-Qur\'an)',
+            self::Tahfizh => 'Tahfizh (Hafalan Al-Qur\'an)',
             self::Tajwid => 'Tajwid (Kaidah Hukum Tajwid)',
         };
     }

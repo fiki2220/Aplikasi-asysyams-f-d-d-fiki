@@ -116,14 +116,14 @@ sementara `AssessmentResource` menawarkan:
 
 ```text
 tahsin
-tahfidz
+tahfizh
 tajwid
 ```
 
 Buat test yang membuktikan apakah:
 
 ```text
-assessment_type = tahfidz
+assessment_type = tahfizh
 ```
 
 dan:

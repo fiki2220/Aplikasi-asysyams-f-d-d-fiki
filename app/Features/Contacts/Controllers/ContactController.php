@@ -29,7 +29,7 @@ class ContactController extends Controller
 
         // 3. Kirim Email ke Admin
         // Ganti dengan email tujuan yang diminta
-        Mail::to('qasysyams23@gmail.com')->send(new ContactFormMail($data));
+        Mail::to('rqasysyams23@gmail.com')->send(new ContactFormMail($data));
 
         // 4. Kembali dengan pesan sukses
         return back()->with('success', 'Pesan Anda berhasil dikirim! Kami akan segera menghubungi Anda.');
