@@ -13,6 +13,12 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 
+// ✅ IMPORT YANG BENAR UNTUK FILAMENT 3
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
+use pxlrbt\FilamentExcel\Columns\Column;
+
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
@@ -59,9 +65,6 @@ class UserResource extends Resource
     // ELOQUENT QUERY — Optimasi kolom yang di-query
     // ==========================================================
 
-    /**
-     * Optimasi query tabel — batasi kolom agar lebih cepat.
-     */
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
@@ -77,8 +80,6 @@ class UserResource extends Resource
                 'gender',
                 'file_kk',
                 'file_akta',
-                'file_ijazah',
-                'file_foto',
                 'terms_accepted_at',
                 'created_at',
                 'updated_at',
@@ -177,6 +178,7 @@ class UserResource extends Resource
                             ->label('Peran / Hak Akses')
                             ->options(fn (): array => auth()->user()?->role === 'superadmin' ? [
                                 'superadmin' => 'Super Admin (Developer)',
+                                'admin' => 'Admin',
                                 'guru' => 'Guru',
                                 'student' => 'Siswa (Santri)',
                             ] : [
@@ -260,7 +262,7 @@ class UserResource extends Resource
                     ->columns(2)
                     ->visible(fn (Forms\Get $get): bool => $get('role') === 'guru' && count(static::getTeacherFields()) > 0),
 
-                // SECTION 7: STATUS AKUN — DENGAN TOMBOL PERSETUJUAN
+                // SECTION 7: STATUS AKUN
                 Forms\Components\Section::make('Status Akun')
                     ->description('Atur status aktif pengguna dan verifikasi persetujuan syarat.')
                     ->icon('heroicon-o-signal')
@@ -477,11 +479,10 @@ class UserResource extends Resource
     {
         $fields = [];
 
+        // ✅ Ijazah & Pas Foto Dihapus
         $documents = [
-            'file_kk'     => ['label' => 'Kartu Keluarga (KK)', 'type' => 'pdf_image'],
-            'file_akta'   => ['label' => 'Akta Kelahiran',      'type' => 'pdf_image'],
-            'file_ijazah' => ['label' => 'Ijazah / SKL',        'type' => 'pdf_image'],
-            'file_foto'   => ['label' => 'Pas Foto 3x4',        'type' => 'image_only'],
+            'file_kk'     => ['label' => 'Kartu Keluarga (KK)'],
+            'file_akta'   => ['label' => 'Akta Kelahiran'],
         ];
 
         foreach ($documents as $column => $config) {
@@ -489,15 +490,11 @@ class UserResource extends Resource
                 continue;
             }
 
-            $isImageOnly = $config['type'] === 'image_only';
             $folderName = str_replace('file_', '', $column);
 
             $fields[] = Forms\Components\FileUpload::make($column)
                 ->label($config['label'])
-                ->image($isImageOnly)
-                ->acceptedFileTypes($isImageOnly
-                    ? ['image/jpeg', 'image/png']
-                    : ['application/pdf', 'image/jpeg', 'image/png'])
+                ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
                 ->directory("ppdb-documents/{$folderName}")
                 ->disk('public')
                 ->visibility('public')
@@ -548,6 +545,38 @@ class UserResource extends Resource
         return $table
             ->columns(static::getTableColumns())
             ->filters(static::getTableFilters())
+            
+            // ✅ FITUR EXPORT EXCEL (HEADER)
+            ->headerActions([
+                ExportAction::make()
+                    ->label('Export ke Excel')
+                    ->color('success')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->exports([
+                        ExcelExport::make()
+                            ->fromTable() 
+                            ->withColumns([
+                                Column::make('name')->heading('Nama Lengkap'),
+                                Column::make('role')->heading('Peran'),
+                                Column::make('email')->heading('Email'),
+                                Column::make('nisn')->heading('NISN'),
+                                Column::make('program')->heading('Program'),
+                                Column::make('gender')->heading('L/P'),
+                                Column::make('phone')->heading('No HP Santri'),
+                                Column::make('birth_place')->heading('Tempat Lahir'),
+                                Column::make('birth_date')->heading('Tanggal Lahir'),
+                                Column::make('father_name')->heading('Nama Ayah'),
+                                Column::make('mother_name')->heading('Nama Ibu'),
+                                Column::make('parent_phone')->heading('No HP Orang Tua'),
+                                Column::make('school_origin')->heading('Asal Sekolah'),
+                                Column::make('grade_level')->heading('Jenjang / Kelas'),
+                                Column::make('address')->heading('Alamat Lengkap'),
+                                Column::make('is_active')->heading('Status Aktif'),
+                            ])
+                            ->withFilename(fn () => 'Data-Santri-' . now()->format('Y-m-d_H-i'))
+                    ]),
+            ])
+            
             ->recordClasses(fn (User $record) =>
                 ! $record->is_active
                     ? 'bg-amber-50 dark:bg-amber-950/20'
@@ -566,6 +595,12 @@ class UserResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    // ✅ FITUR EXPORT EXCEL (BULK)
+                    ExportBulkAction::make()
+                        ->label('Export Terpilih (Excel)')
+                        ->color('success')
+                        ->icon('heroicon-o-document-arrow-down'),
+
                     Tables\Actions\BulkAction::make('approve')
                         ->label('Setujui (Aktifkan)')
                         ->icon('heroicon-o-check-badge')
@@ -613,12 +648,14 @@ class UserResource extends Resource
                 ->badge()
                 ->formatStateUsing(fn (?string $state): string => match ($state) {
                     'superadmin' => 'Super Admin',
+                    'admin' => 'Admin',
                     'guru' => 'Guru',
                     'student' => 'Siswa',
                     default => $state ?? '-',
                 })
                 ->color(fn (?string $state): string => match ($state) {
                     'superadmin' => 'danger',
+                    'admin' => 'info',
                     'guru' => 'warning',
                     'student' => 'success',
                     default => 'gray',

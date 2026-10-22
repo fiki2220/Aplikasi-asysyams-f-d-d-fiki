@@ -1,7 +1,7 @@
 <x-guest-layout>
     <div class="flex flex-col items-center mb-10">
         <div class="p-2 bg-white rounded-2xl shadow-xl border border-gray-50 mb-6 transform hover:scale-105 transition-transform duration-300">
-            <img src="{{ asset('images/logo.PNG') }}" alt="Logo Asy-Syams" class="h-24 w-auto rounded-xl">
+            <img src="{{ asset('images/logo.png') }}" alt="Logo Asy-Syams" class="h-24 w-auto rounded-xl">
         </div>
 
         <div class="flex flex-col items-center">
@@ -31,17 +31,19 @@
 
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <form method="POST" action="{{ route('login') }}">
+    <form method="POST" action="{{ route('login') }}" x-data="{ showPassword: false }">
         @csrf
 
+        {{-- INPUT EMAIL --}}
         <div class="space-y-1">
             <x-input-label for="email" :value="__('Email Address')" class="text-xs font-bold uppercase text-gray-600 ml-1" />
             <x-text-input id="email"
                 class="block w-full bg-gray-50 border-gray-200 focus:bg-white focus:ring-[#FF4D00] focus:border-[#FF4D00] rounded-xl py-3 transition-all shadow-sm"
-                type="email" name="email" :value="old('email')" required autofocus />
+                type="email" name="email" :value="old('email')" required autofocus placeholder="Masukkan email terdaftar" />
             <x-input-error :messages="$errors->get('email')" class="mt-1" />
         </div>
 
+        {{-- INPUT PASSWORD --}}
         <div class="mt-5 space-y-1">
             <div class="flex justify-between items-center ml-1">
                 <x-input-label for="password" :value="__('Password')" class="text-xs font-bold uppercase text-gray-600" />
@@ -51,9 +53,28 @@
                 </a>
                 @endif
             </div>
-            <x-text-input id="password"
-                class="block w-full bg-gray-50 border-gray-200 focus:bg-white focus:ring-[#FF4D00] focus:border-[#FF4D00] rounded-xl py-3 transition-all shadow-sm"
-                type="password" name="password" required autocomplete="current-password" />
+            
+            <div class="relative">
+                <input id="password"
+                    :type="showPassword ? 'text' : 'password'"
+                    name="password" required autocomplete="current-password"
+                    placeholder="Masukkan password Anda"
+                    class="block w-full bg-gray-50 border-gray-200 focus:bg-white focus:ring-[#FF4D00] focus:border-[#FF4D00] rounded-xl py-3 pl-4 pr-12 transition-all shadow-sm" />
+
+                {{-- TOMBOL LIHAT PASSWORD (IKON MATA) --}}
+                <button type="button" @click="showPassword = !showPassword" 
+                        class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-[#FF4D00] transition-colors focus:outline-none">
+                    {{-- Ikon Mata Tertutup (Sembunyikan) --}}
+                    <svg x-show="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0l-3.29-3.29" />
+                    </svg>
+                    {{-- Ikon Mata Terbuka (Tampilkan) --}}
+                    <svg x-show="showPassword" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                </button>
+            </div>
             <x-input-error :messages="$errors->get('password')" class="mt-1" />
         </div>
 
@@ -62,7 +83,7 @@
                 <input id="remember_me" type="checkbox"
                     class="rounded-md border-gray-300 text-[#FF4D00] shadow-sm focus:ring-[#FF4D00] transition-colors"
                     name="remember">
-                <span class="ms-2 text-sm text-gray-500 group-hover:text-gray-700">{{ __('Remember me') }}</span>
+                <span class="ms-2 text-sm text-gray-500 group-hover:text-gray-700">{{ __('Ingat Saya') }}</span>
             </label>
         </div>
 

@@ -8,7 +8,6 @@ use Filament\Actions;
 use Filament\Resources\Components\Tab;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Cache;
 
 class ListUsers extends ListRecords
 {
@@ -24,33 +23,31 @@ class ListUsers extends ListRecords
     }
 
     /**
-     * Ambil semua count dalam 1 query (bukan 5 query terpisah).
-     * Di-cache 60 detik untuk hindari query berulang.
+     * Ambil semua count langsung dari database (Real-time).
      */
     protected function getCounts(): array
     {
-        return Cache::remember('users.tab.counts', 60, function () {
-            // 1 query untuk count per role
-            $byRole = User::query()
-                ->selectRaw('role, COUNT(*) as total')
-                ->groupBy('role')
-                ->pluck('total', 'role')
-                ->toArray();
+        // 1 query untuk count per role
+        $byRole = User::query()
+            ->selectRaw('role, COUNT(*) as total')
+            ->groupBy('role')
+            ->pluck('total', 'role')
+            ->toArray();
 
-            // 1 query untuk count pending
-            $pending = User::where('is_active', false)->count();
+        // 1 query untuk count pending
+        $pending = User::where('is_active', false)->count();
 
-            // Total semua
-            $all = array_sum($byRole);
+        // Total semua
+        $all = array_sum($byRole);
 
-            return [
-                'all' => $all,
-                'student' => $byRole['student'] ?? 0,
-                'guru' => $byRole['guru'] ?? 0,
-                'superadmin' => $byRole['superadmin'] ?? 0,
-                'pending' => $pending,
-            ];
-        });
+        return [
+            'all' => $all,
+            'student' => $byRole['student'] ?? 0,
+            'guru' => $byRole['guru'] ?? 0,
+            'admin' => $byRole['admin'] ?? 0, 
+            'superadmin' => $byRole['superadmin'] ?? 0,
+            'pending' => $pending,
+        ];
     }
 
     public function getTabs(): array
@@ -73,6 +70,12 @@ class ListUsers extends ListRecords
                 ->badge($counts['guru'])
                 ->badgeColor('warning')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('role', 'guru')),
+
+            'admin' => Tab::make('Admin')
+                ->icon('heroicon-o-user')
+                ->badge($counts['admin'])
+                ->badgeColor('info')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('role', 'admin')),
 
             'superadmin' => Tab::make('Super Admin')
                 ->icon('heroicon-o-shield-check')

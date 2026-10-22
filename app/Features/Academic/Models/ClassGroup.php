@@ -43,13 +43,15 @@ class ClassGroup extends Model
         'semester_id',
         'teacher_id',
         'description',
-        'start_time', // ✅ TAMBAHAN
-        'end_time',   // ✅ TAMBAHAN
+        'start_time',
+        'end_time',
+        'days', // ✅ TAMBAHAN
     ];
 
     protected $casts = [
         'start_time' => 'datetime:H:i',
         'end_time'   => 'datetime:H:i',
+        'days'       => 'array', // ✅ TAMBAHAN
     ];
 
     protected static function booted(): void

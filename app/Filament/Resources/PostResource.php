@@ -12,6 +12,8 @@ use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Intervention\Image\Laravel\Facades\Image; // ✅ Import Intervention
+use Illuminate\Support\Facades\Storage;
 
 class PostResource extends Resource
 {
@@ -96,7 +98,7 @@ class PostResource extends Resource
 
                 // SECTION 2: GAMBAR
                 Forms\Components\Section::make('Foto Utama')
-                    ->description('Upload foto utama berita. Format: JPG/PNG, maks 3MB.')
+                    ->description('Upload foto utama berita. Sistem akan otomatis mengkonversi ke format WebP agar ringan.')
                     ->icon('heroicon-o-photo')
                     ->schema([
                         Forms\Components\FileUpload::make('image')
@@ -108,8 +110,26 @@ class PostResource extends Resource
                             ->disk('public')
                             ->visibility('public')
                             ->maxSize(3072)
-                            ->helperText('Resolusi direkomendasikan: 1200×675 px (16:9)')
-                            ->columnSpanFull(),
+                            ->helperText('Resolusi direkomendasikan: 1200×675 px (16:9). Format akan otomatis diubah ke WebP.')
+                            ->columnSpanFull()
+                            // ✅ LOGIKA AUTO-CONVERT KE WEBP
+                            ->saveUploadedFileUsing(function ($file) {
+                                // 1. Buat nama file unik dengan ekstensi .webp
+                                $filename = Str::uuid() . '.webp';
+                                $path = 'posts/' . $filename;
+
+                                // 2. Baca gambar menggunakan Intervention
+                                $image = Image::read($file);
+
+                                // 3. Encode ke WebP dengan kualitas 85 (Tajam & Ringan)
+                                $encoded = $image->toWebp(85);
+
+                                // 4. Simpan ke storage public
+                                Storage::disk('public')->put($path, (string) $encoded);
+
+                                // 5. Kembalikan path untuk disimpan ke database
+                                return $path;
+                            }),
 
                         Forms\Components\TextInput::make('image_caption')
                             ->label('Keterangan Foto (Caption)')

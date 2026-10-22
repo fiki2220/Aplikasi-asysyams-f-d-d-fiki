@@ -23,10 +23,6 @@ class ListRolePermissions extends Page implements HasForms
 
     public ?array $data = [];
 
-    // ==========================================================
-    // HEADER PAGE
-    // ==========================================================
-
     public function getTitle(): string
     {
         return 'Hak Akses Role';
@@ -42,19 +38,11 @@ class ListRolePermissions extends Page implements HasForms
         return 'Atur hak akses untuk setiap role. Perubahan berlaku setelah user reload halaman.';
     }
 
-    // ==========================================================
-    // LIFECYCLE
-    // ==========================================================
-
     public function mount(): void
     {
         $this->setPermissionsForRole('guru');
         $this->form->fill($this->data);
     }
-
-    // ==========================================================
-    // FORM
-    // ==========================================================
 
     public function form(Form $form): Form
     {
@@ -83,10 +71,6 @@ class ListRolePermissions extends Page implements HasForms
             ->statePath('data');
     }
 
-    // ==========================================================
-    // SAVE
-    // ==========================================================
-
     public function save(): void
     {
         $state = $this->form->getState();
@@ -97,7 +81,8 @@ class ListRolePermissions extends Page implements HasForms
         $grantedCount = 0;
         $revokedCount = 0;
 
-        foreach (RolePermission::PERMISSIONS as $permission => $label) {
+        // ✅ Menggunakan method baru getAllPermissions()
+        foreach (RolePermission::getAllPermissions() as $permission => $label) {
             $wasAllowed = RolePermission::query()
                 ->where('role', $role)
                 ->where('permission', $permission)
@@ -149,10 +134,6 @@ class ListRolePermissions extends Page implements HasForms
         $this->form->fill($this->data);
     }
 
-    // ==========================================================
-    // FORM ACTIONS
-    // ==========================================================
-
     protected function getFormActions(): array
     {
         return [
@@ -183,10 +164,6 @@ class ListRolePermissions extends Page implements HasForms
                 }),
         ];
     }
-
-    // ==========================================================
-    // PERMISSION SECTIONS BUILDER
-    // ==========================================================
 
     private function permissionSections(): array
     {
@@ -243,14 +220,9 @@ class ListRolePermissions extends Page implements HasForms
         return $sections;
     }
 
-    // ==========================================================
-    // HELPERS — Description & Icon
-    // ==========================================================
-
     private function getSectionDescription(array $permissions): string
     {
         $total = count($permissions);
-
         return "{$total} fitur tersedia di grup ini. Klik 'Pilih Semua' untuk mengaktifkan semuanya.";
     }
 
@@ -277,10 +249,6 @@ class ListRolePermissions extends Page implements HasForms
         };
     }
 
-    // ==========================================================
-    // LOAD PERMISSIONS FROM DB
-    // ==========================================================
-
     public function setPermissionsForRole(string $role): void
     {
         abort_unless(array_key_exists($role, RolePermission::ROLES), 403);
@@ -293,7 +261,8 @@ class ListRolePermissions extends Page implements HasForms
 
         $permissions = [];
 
-        foreach (RolePermission::PERMISSIONS as $permission => $label) {
+        // ✅ Menggunakan method baru getAllPermissions()
+        foreach (RolePermission::getAllPermissions() as $permission => $label) {
             $permissions[$this->permissionStateKey($permission)] = in_array($permission, $allowedPermissions, true);
         }
 

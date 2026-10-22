@@ -49,8 +49,8 @@
             </div>
             <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-amber-500">
                 <div class="flex items-center gap-4">
-                    <div class="p-3 bg-amber-100 text-amber-700 rounded-full"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6h6v6m2 4H7a2 2 0 01-2-2V7a2 2 0 012-2h3l2-2 2 2h3a2 2 0 012 2v12a2 2 0 01-2 2z"></path></svg></div>
-                    <div><h3 class="text-lg font-bold text-gray-900">Absensi Harian</h3><p class="text-sm text-gray-500">{{ $attendanceSummary['total'] ?? 0 }} Data</p></div>
+                    <div class="p-3 bg-amber-100 text-amber-700 rounded-full"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>
+                    <div><h3 class="text-lg font-bold text-gray-900">Jadwal Hari Ini</h3><p class="text-sm text-gray-500">{{ isset($todayClasses) ? $todayClasses->count() : 0 }} Kelas</p></div>
                 </div>
             </div>
             <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-red-500 cursor-pointer" onclick="document.getElementById('logout-form').submit()">
@@ -61,82 +61,12 @@
             </div>
         </div>
 
-        {{-- ABSENSI HARIAN USTAD --}}
-        @if(Auth::user()->role === 'guru')
-        @php
-        $teacherStatusLabels = ['present' => 'Hadir', 'late' => 'Terlambat', 'permission' => 'Izin', 'sick' => 'Sakit', 'alpha' => 'Alpha'];
-        $teacherStatusColors = ['present' => 'bg-green-100 text-green-800', 'late' => 'bg-yellow-100 text-yellow-800', 'permission' => 'bg-blue-100 text-blue-800', 'sick' => 'bg-gray-100 text-gray-800', 'alpha' => 'bg-red-100 text-red-800'];
-        $teacherAttendanceStatus = $teacherAttendanceToday?->status;
-        @endphp
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
-            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                <h2 class="text-lg font-bold text-gray-800">Absensi Kehadiran Harian</h2>
-                <p class="text-sm text-gray-500">Check-in dan check-out harian Anda (bukan per kelas).</p>
-            </div>
-            <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-1 border border-gray-200 rounded-lg p-5">
-                    <div class="text-sm font-semibold text-gray-500 uppercase">Status Hari Ini</div>
-                    <div class="mt-3">
-                        @if($teacherAttendanceToday)
-                        <span class="inline-flex rounded-full px-3 py-1 text-sm font-bold {{ $teacherStatusColors[$teacherAttendanceStatus] ?? 'bg-gray-100 text-gray-800' }}">
-                            {{ $teacherStatusLabels[$teacherAttendanceStatus] ?? 'Belum Absen' }}
-                        </span>
-                        @else
-                        <span class="inline-flex rounded-full px-3 py-1 text-sm font-bold bg-gray-100 text-gray-800">Belum Absen</span>
-                        @endif
-                    </div>
-                    <div class="mt-4 text-sm text-gray-600 space-y-1">
-                        <div>Check In: <span class="font-semibold">{{ $teacherAttendanceToday?->check_in_at?->format('H:i') ?? '-' }}</span></div>
-                        <div>Check Out: <span class="font-semibold">{{ $teacherAttendanceToday?->check_out_at?->format('H:i') ?? '-' }}</span></div>
-                    </div>
-                    <div class="mt-5 flex flex-col sm:flex-row gap-3">
-                        @if(! $teacherAttendanceToday)
-                        <form method="POST" action="{{ route('teacher-attendances.check-in') }}">@csrf
-                            <button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-lg bg-green-700 text-white font-semibold hover:bg-green-800">Check In Harian</button>
-                        </form>
-                        @elseif($teacherAttendanceToday->check_in_at && ! $teacherAttendanceToday->check_out_at && ! in_array($teacherAttendanceToday->status, ['permission', 'sick', 'alpha'], true))
-                        <form method="POST" action="{{ route('teacher-attendances.check-out') }}">@csrf
-                            <button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-lg bg-blue-700 text-white font-semibold hover:bg-blue-800">Check Out Harian</button>
-                        </form>
-                        @else
-                        <div class="text-sm font-semibold text-gray-600">Absensi harian selesai.</div>
-                        @endif
-                    </div>
-                </div>
-                <div class="lg:col-span-2 overflow-x-auto border border-gray-200 rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Tanggal</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Check In</th>
-                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Check Out</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-100">
-                            @forelse($teacherAttendanceRecent as $attendance)
-                            <tr>
-                                <td class="px-4 py-3 text-sm text-gray-900">{{ $attendance->date?->format('d M Y') }}</td>
-                                <td class="px-4 py-3 text-sm font-semibold">{{ $teacherStatusLabels[$attendance->status] ?? $attendance->status }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ $attendance->check_in_at?->format('H:i') ?? '-' }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-700">{{ $attendance->check_out_at?->format('H:i') ?? '-' }}</td>
-                            </tr>
-                            @empty
-                            <tr><td colspan="4" class="px-4 py-6 text-center text-sm text-gray-500">Belum ada riwayat absensi.</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        @endif
-
-        {{-- JADWAL & ABSENSI KELAS --}}
+        {{-- JADWAL & ABSENSI KELAS (Fokus Utama) --}}
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
             <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div>
                     <h2 class="text-lg font-bold text-gray-800">Jadwal & Absensi Kelas</h2>
-                    <p class="text-sm text-gray-500">Isi absensi santri dan lakukan Check In kelas.</p>
+                    <p class="text-sm text-gray-500">Isi absensi santri dan lakukan Check In/Out saat mengajar.</p>
                 </div>
                 @if(Auth::user()->role === 'superadmin')
                 <a href="{{ url('/admin/meetings/create') }}" class="text-sm text-white bg-green-600 px-4 py-2 rounded-lg hover:bg-green-700 transition">+ Buat Pertemuan Baru</a>
@@ -184,11 +114,11 @@
                                 @endif
                             </td>
 
-                            {{-- AKSI (ISI ABSENSI, CHECK IN/OUT, EDIT) --}}
+                            {{-- AKSI --}}
                             <td class="px-6 py-4 text-right">
                                 <div class="flex flex-col sm:flex-row gap-2 justify-end items-center">
                                     
-                                    {{-- 1. TOMBOL ISI ABSENSI (Modal Alpine.js) --}}
+                                    {{-- 1. ISI ABSENSI (Modal Alpine.js) --}}
                                     @if($isToday || Auth::user()->role === 'superadmin')
                                     <div x-data="{ open: false }" class="inline-block">
                                         <button @click="open = true" type="button" class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition">
@@ -236,7 +166,7 @@
                                     </div>
                                     @endif
 
-                                    {{-- 2. TOMBOL CHECK IN / OUT (Khusus Ustad) --}}
+                                    {{-- 2. CHECK IN / OUT KELAS (Khusus Ustad) --}}
                                     @if(Auth::user()->role === 'guru')
                                         @if($isToday && !$meeting->teacher_check_in_at)
                                         <form method="POST" action="{{ route('meetings.check-in', $meeting->id) }}" class="inline-block">@csrf
@@ -253,7 +183,7 @@
                                         @endif
                                     @endif
 
-                                    {{-- 3. TOMBOL EDIT MANUAL (Khusus Superadmin) --}}
+                                    {{-- 3. EDIT MANUAL (Khusus Superadmin) --}}
                                     @if(Auth::user()->role === 'superadmin')
                                         <a href="{{ url('/admin/meetings/'.$meeting->id.'/edit') }}" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-gray-800 text-white text-xs font-semibold rounded hover:bg-gray-900 transition">
                                             Edit

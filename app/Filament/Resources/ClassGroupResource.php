@@ -71,19 +71,34 @@ class ClassGroupResource extends Resource
                             ->searchable()
                             ->native(false),
 
-                        // ✅ JAM MASUK
                         Forms\Components\TimePicker::make('start_time')
                             ->label('Jam Masuk Kelas')
                             ->seconds(false)
                             ->displayFormat('H:i')
                             ->helperText('Contoh: 16:30'),
 
-                        // ✅ JAM PULANG
                         Forms\Components\TimePicker::make('end_time')
                             ->label('Jam Selesai Kelas')
                             ->seconds(false)
                             ->displayFormat('H:i')
                             ->helperText('Contoh: 18:00'),
+
+                        // ✅ INPUT HARI MASUK
+                        Forms\Components\CheckboxList::make('days')
+                            ->label('Hari Masuk Kelas')
+                            ->options([
+                                'Senin' => 'Senin',
+                                'Selasa' => 'Selasa',
+                                'Rabu' => 'Rabu',
+                                'Kamis' => 'Kamis',
+                                'Jumat' => 'Jumat',
+                                'Sabtu' => 'Sabtu',
+                                'Minggu' => 'Minggu',
+                            ])
+                            ->columns(4)
+                            ->required()
+                            ->columnSpanFull()
+                            ->helperText('Pilih hari kelas ini berlangsung.'),
 
                         Forms\Components\TextInput::make('name')
                             ->label('Nama Kelas')
@@ -133,9 +148,16 @@ class ClassGroupResource extends Resource
                         Infolists\Components\TextEntry::make('class_type')->label('Jenis Kelas')->badge()->formatStateUsing(fn (?string $state): string => ClassGroup::classTypeLabel($state))->color('primary'),
                         Infolists\Components\TextEntry::make('class_letter')->label('Huruf Kelas')->placeholder('—')->badge(),
                         
-                        // ✅ TAMPILKAN JAM DI INFOLIST
                         Infolists\Components\TextEntry::make('start_time')->label('Jam Masuk')->dateTime('H:i')->placeholder('—')->icon('heroicon-m-clock'),
                         Infolists\Components\TextEntry::make('end_time')->label('Jam Pulang')->dateTime('H:i')->placeholder('—')->icon('heroicon-m-clock'),
+
+                        // ✅ TAMPILKAN HARI DI INFOLIST
+                        Infolists\Components\TextEntry::make('days')
+                            ->label('Hari Masuk')
+                            ->badge()
+                            ->color('info')
+                            ->placeholder('—')
+                            ->formatStateUsing(fn ($state) => is_array($state) ? implode(', ', $state) : $state),
 
                         Infolists\Components\TextEntry::make('semester.name')->label('Semester')->badge()->color('success'),
                         Infolists\Components\TextEntry::make('teacher.name')->label('Ustad / Pengajar')->icon('heroicon-m-user-circle')->placeholder('Belum ditentukan'),
@@ -159,7 +181,6 @@ class ClassGroupResource extends Resource
                     ->description(fn (ClassGroup $record): ?string =>
                         $record->teacher?->name ? 'Ustad: ' . $record->teacher->name : null),
 
-                // ✅ TAMPILKAN JAM DI TABEL
                 Tables\Columns\TextColumn::make('start_time')
                     ->label('Jadwal Kelas')
                     ->getStateUsing(fn (ClassGroup $record): string =>
@@ -168,6 +189,14 @@ class ClassGroupResource extends Resource
                     ->icon('heroicon-m-clock')
                     ->badge()
                     ->color('gray'),
+
+                // ✅ TAMPILKAN HARI DI TABEL
+                Tables\Columns\TextColumn::make('days')
+                    ->label('Hari')
+                    ->badge()
+                    ->color('info')
+                    ->placeholder('—')
+                    ->formatStateUsing(fn ($state) => is_array($state) ? implode(', ', $state) : $state),
 
                 Tables\Columns\TextColumn::make('class_type')
                     ->label('Jenis Kelas')
@@ -205,41 +234,21 @@ class ClassGroupResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('class_type')
-                    ->label('Jenis Kelas')
-                    ->options(ClassGroup::classTypeOptions())
-                    ->multiple(),
-
-                Tables\Filters\SelectFilter::make('semester_id')
-                    ->label('Semester')
-                    ->options(Semester::pluck('name', 'id'))
-                    ->searchable()
-                    ->multiple(),
-
-                Tables\Filters\SelectFilter::make('teacher_id')
-                    ->label('Ustad / Pengajar')
-                    ->options(User::whereIn('role', ['superadmin', 'guru'])->pluck('name', 'id'))
-                    ->searchable()
-                    ->multiple(),
+                Tables\Filters\SelectFilter::make('class_type')->label('Jenis Kelas')->options(ClassGroup::classTypeOptions())->multiple(),
+                Tables\Filters\SelectFilter::make('semester_id')->label('Semester')->options(Semester::pluck('name', 'id'))->searchable()->multiple(),
+                Tables\Filters\SelectFilter::make('teacher_id')->label('Ustad / Pengajar')->options(User::whereIn('role', ['superadmin', 'guru'])->pluck('name', 'id'))->searchable()->multiple(),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()->iconButton()->tooltip('Lihat Detail'),
                 Tables\Actions\EditAction::make()->iconButton()->tooltip('Edit'),
                 Tables\Actions\Action::make('duplicate')
-                    ->label('Duplikat')
-                    ->icon('heroicon-o-document-duplicate')
-                    ->iconButton()
-                    ->tooltip('Duplikat Kelas')
-                    ->color('info')
-                    ->requiresConfirmation()
-                    ->modalHeading('Duplikat Kelas Ini?')
-                    ->modalDescription('Kelas baru akan dibuat. Silakan ubah huruf kelas setelah.')
+                    ->label('Duplikat')->icon('heroicon-o-document-duplicate')->iconButton()->tooltip('Duplikat Kelas')->color('info')
+                    ->requiresConfirmation()->modalHeading('Duplikat Kelas Ini?')->modalDescription('Kelas baru akan dibuat. Silakan ubah huruf kelas setelah.')
                     ->action(function (ClassGroup $record) {
                         $new = $record->replicate();
                         $new->name = $record->name . ' (Copy)';
                         $new->slug = $record->slug . '-copy-' . time();
                         $new->save();
-
                         Notification::make()->title('✅ Kelas Berhasil Diduplikat')->body("Kelas baru: \"{$new->name}\"")->success()->send();
                     }),
                 Tables\Actions\DeleteAction::make()->iconButton()->tooltip('Hapus')->requiresConfirmation(),
@@ -247,9 +256,7 @@ class ClassGroupResource extends Resource
             ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])])
             ->defaultSort('created_at', 'desc')->striped()
             ->paginated([10, 25, 50])->defaultPaginationPageOption(10)
-            ->emptyStateHeading('Belum Ada Kelas')
-            ->emptyStateDescription('Buat kelas pertama Anda untuk mulai mengelola santri.')
-            ->emptyStateIcon('heroicon-o-academic-cap');
+            ->emptyStateHeading('Belum Ada Kelas')->emptyStateDescription('Buat kelas pertama Anda untuk mulai mengelola santri.')->emptyStateIcon('heroicon-o-academic-cap');
     }
 
     public static function getRelations(): array
@@ -264,7 +271,6 @@ class ClassGroupResource extends Resource
     {
         $query = parent::getEloquentQuery();
         $user = auth()->user();
-
         if ($user && $user->role === 'guru') {
             return $query->where('teacher_id', $user->id);
         }

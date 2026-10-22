@@ -6,6 +6,8 @@ use App\Features\Meetings\Models\Attendance;
 use App\Features\Grades\Models\Grade;
 use App\Features\Payments\Models\Payment;
 use App\Features\Academic\Models\Semester;
+use App\Features\Academic\Models\ClassGroup;
+use App\Features\Meetings\Models\Meeting; // ✅ Pastikan ini di-import
 use App\Features\Students\Services\StudentService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -17,17 +19,48 @@ use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
-    /**
-     * Halaman Utama Dashboard Santri
-     */
     public function dashboard(StudentService $studentService)
     {
         $user = Auth::user();
 
-        // --- LOGIC KHUSUS GURU ---
+        // --- LOGIC KHUSUS GURU & SUPERADMIN ---
         if ($user->role === 'guru' || $user->role === 'superadmin') {
+            
+            // ⭐ FITUR BARU: OTOMATIS MEMBUAT JADWAL HARI INI (BERDASARKAN HARI)
+            $teacherClasses = ClassGroup::where('teacher_id', $user->id)->get();
+            
+            // Ambil nama hari ini dalam bahasa Indonesia (contoh: "Kamis")
+            $todayName = now()->locale('id')->translatedFormat('l'); 
+
+            foreach ($teacherClasses as $class) {
+                // Cek apakah hari ini ada di jadwal kelas tersebut
+                $isClassToday = is_array($class->days) && in_array($todayName, $class->days);
+
+                if ($isClassToday) {
+                    // Cek apakah kelas ini sudah punya jadwal pertemuan hari ini
+                    Meeting::firstOrCreate(
+                        ['class_group_id' => $class->id, 'date' => today()],
+                        [
+                            'user_id' => $user->id, 
+                            'title'   => 'Pertemuan Rutin'
+                        ]
+                    );
+                }
+            }
+
+            // Ambil semua jadwal pertemuan (hari ini & ke depan) untuk Ustad ini
+            $scheduleMeetings = Meeting::with(['classGroup.semester', 'attendances'])
+                ->whereHas('classGroup', function ($query) use ($user) {
+                    $query->where('teacher_id', $user->id);
+                })
+                ->whereDate('date', '>=', today())
+                ->orderBy('date', 'asc')
+                ->take(10) // Tampilkan maksimal 10 jadwal terdekat
+                ->get();
+
             return view('pages.student.dashboard', [
                 'user' => $user,
+                'scheduleMeetings' => $scheduleMeetings,
                 ...$studentService->teacherDashboardData($user),
             ]);
         }
@@ -69,7 +102,6 @@ class StudentController extends Controller
     public function payment()
     {
         $user = Auth::user();
-
         $activeSemester = Semester::where('is_active', true)->first();
         $paymentStatus = 'no_bill';
         $billAmount = 0;
@@ -81,7 +113,6 @@ class StudentController extends Controller
                 ->where('semester_id', $activeSemester->id)
                 ->latest()
                 ->first();
-
             $paymentStatus = $payment?->status ?? 'unpaid';
         }
 
@@ -110,7 +141,6 @@ class StudentController extends Controller
     public function transcript()
     {
         $user = Auth::user();
-
         $gradesGrouped = Grade::with(['subject', 'semester'])
             ->where('user_id', $user->id)
             ->get()
@@ -125,7 +155,6 @@ class StudentController extends Controller
     public function attendance()
     {
         $user = Auth::user();
-
         $attendances = Attendance::with(['meeting.classGroup.subject'])
             ->where('user_id', $user->id)
             ->latest()
@@ -133,7 +162,6 @@ class StudentController extends Controller
 
         $totalMeeting = Attendance::where('user_id', $user->id)->count();
         $totalPresent = Attendance::where('user_id', $user->id)->where('status', 'present')->count();
-
         $percentage = $totalMeeting > 0 ? round(($totalPresent / $totalMeeting) * 100) : 0;
 
         return view('pages.student.attendance', compact('user', 'attendances', 'percentage'));
@@ -143,40 +171,24 @@ class StudentController extends Controller
     // ⭐ PROFIL SANTRI
     // ==========================================================
 
-    /**
-     * Halaman Profil Santri — view & edit.
-     */
     public function profile()
     {
         $user = Auth::user();
-
-        // Konsisten dengan logic dashboard — selain guru/superadmin = santri
         if ($user->role === 'guru' || $user->role === 'superadmin') {
-            return redirect()->route('dashboard')
-                ->with('error', 'Halaman ini hanya untuk santri.');
+            return redirect()->route('dashboard')->with('error', 'Halaman ini hanya untuk santri.');
         }
-
-        return view('pages.student.profile', [
-            'user' => $user,
-        ]);
+        return view('pages.student.profile', ['user' => $user]);
     }
 
-    /**
-     * Update Profil Santri.
-     */
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
-
-        // Konsisten: selain guru/superadmin = santri
         if ($user->role === 'guru' || $user->role === 'superadmin') {
             abort(403, 'Hanya santri yang bisa mengubah profil.');
         }
 
-        // ⭐ Ambil daftar kolom yang BENAR-BENAR ada di tabel users
         $existingColumns = Schema::getColumnListing('users');
 
-        // ── 1. Validasi dasar (nama & email selalu ada) ──
         $rules = [
             'name'  => 'required|string|max:150',
             'email' => 'required|email|max:150|unique:users,email,' . $user->id,
@@ -189,10 +201,8 @@ class StudentController extends Controller
             'email.unique'   => 'Email sudah digunakan.',
         ];
 
-        // ── 2. Validasi dinamis field teks ──
         $optionalText = [
             'phone'        => 'nullable|string|max:20',
-            // ✅ PERBAIKAN: Ubah 'laki-laki,perempuan' menjadi 'L,P' agar sinkron dengan form Blade
             'gender'       => 'nullable|in:L,P', 
             'birth_place'  => 'nullable|string|max:100',
             'birth_date'   => 'nullable|date',
@@ -209,8 +219,6 @@ class StudentController extends Controller
             }
         }
 
-        // ── 3. Validasi file ──
-        // ✅ PERBAIKAN: Ukuran maksimal diubah jadi 2048 (2MB), Ijazah dihapus, file KK/Akta menerima PDF
         $optionalFiles = [
             'file_foto'   => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'file_kk'     => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
@@ -223,11 +231,9 @@ class StudentController extends Controller
             }
         }
 
-        // ── 4. Validasi password (opsional) ──
         $rules['current_password'] = 'nullable|required_with:password|current_password';
         $rules['password']         = 'nullable|string|min:8|confirmed';
 
-        // ── 5. Custom messages ──
         $messages = array_merge($messages, [
             'file_foto.image'                   => 'Foto harus berupa gambar.',
             'file_foto.max'                     => 'Ukuran foto maks 2 MB.',
@@ -246,7 +252,6 @@ class StudentController extends Controller
         DB::beginTransaction();
 
         try {
-            // ── 6. Update field teks ──
             $updateData = [
                 'name'  => $validated['name'],
                 'email' => $validated['email'],
@@ -260,39 +265,30 @@ class StudentController extends Controller
 
             $user->fill($updateData);
 
-            // ── 7. Upload file ──
             foreach (array_keys($optionalFiles) as $field) {
-                if (! in_array($field, $existingColumns, true)) {
-                    continue;
-                }
+                if (! in_array($field, $existingColumns, true)) continue;
 
                 if ($request->hasFile($field)) {
                     $oldPath = $user->{$field};
                     if ($oldPath && Storage::disk('public')->exists($oldPath)) {
                         Storage::disk('public')->delete($oldPath);
                     }
-
                     $newPath = $request->file($field)->store('students/' . $user->id, 'public');
                     $user->{$field} = $newPath;
                 }
             }
 
-            // ── 8. Password (kalau diisi) ──
             if ($request->filled('password')) {
                 $user->password = Hash::make($validated['password']);
             }
 
             $user->save();
-
             DB::commit();
 
             return back()->with('success', '✨ Profil berhasil diperbarui.');
         } catch (\Throwable $e) {
             DB::rollBack();
-
-            return back()
-                ->withInput()
-                ->with('error', 'Gagal menyimpan profil: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Gagal menyimpan profil: ' . $e->getMessage());
         }
     }
 }

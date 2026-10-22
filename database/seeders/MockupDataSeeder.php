@@ -28,7 +28,7 @@ class MockupDataSeeder extends Seeder
 
         $superadmin = $this->user([
             'name' => 'Super Admin Asy-Syams',
-            'email' => 'superadmin@asy-syams.test',
+            'email' => 'superadmin@asysyams.id',
             'role' => 'superadmin',
             'is_active' => true,
             'phone' => '081200000001',

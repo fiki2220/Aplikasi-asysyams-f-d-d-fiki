@@ -83,16 +83,12 @@ class User extends Authenticatable implements FilamentUser
     // ==========================================================
     // MASS ASSIGNMENT — Daftar kolom yang boleh diisi massal
     // ==========================================================
-    /**
-     * ⚠️ PENTING: Semua kolom PPDB WAJIB ada di sini.
-     *    Kalau tidak, register akan error MassAssignmentException.
-     */
     protected $fillable = [
         // ── Akun dasar ─────────────────────────────────
         'name',
         'email',
         'password',
-        'role',          // superadmin | guru | student
+        'role',          // superadmin | admin | guru | student
         'is_active',     // status approve
 
         // ── Data Santri (PPDB) ─────────────────────────
@@ -174,7 +170,6 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Attendance::class);
     }
 
-    // ⭐ TAMBAHAN: Relasi Aspek Karakter
     public function characterAssessments()
     {
         return $this->hasMany(CharacterAssessment::class, 'user_id');
@@ -332,6 +327,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function isAdmin(): bool
     {
+        // ✅ Cek apakah role-nya superadmin ATAU admin
         return in_array($this->role, ['superadmin', 'admin'], true);
     }
 
@@ -351,7 +347,8 @@ class User extends Authenticatable implements FilamentUser
 
     public function hasAccess(string $permission): bool
     {
-        if ($this->role === 'superadmin') {
+        // ✅ Admin dan Superadmin otomatis punya akses ke semua fitur
+        if ($this->isAdmin()) {
             return true;
         }
 
@@ -368,7 +365,8 @@ class User extends Authenticatable implements FilamentUser
 
     public function hasAnyAccess(array $permissions): bool
     {
-        if ($this->role === 'superadmin') {
+        // ✅ Admin dan Superadmin otomatis punya akses ke semua fitur
+        if ($this->isAdmin()) {
             return true;
         }
 
@@ -385,7 +383,8 @@ class User extends Authenticatable implements FilamentUser
 
     public function getFirstAllowedFilamentRoute(): ?string
     {
-        if ($this->role === 'superadmin') {
+        // ✅ Admin dan Superadmin langsung masuk ke Dashboard Admin
+        if ($this->isAdmin()) {
             return route('filament.admin.home');
         }
 
@@ -412,7 +411,8 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        if ($this->role === 'superadmin') {
+        // ✅ Admin dan Superadmin bisa masuk panel
+        if ($this->isAdmin()) {
             return true;
         }
 

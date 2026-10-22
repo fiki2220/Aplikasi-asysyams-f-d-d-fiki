@@ -27,12 +27,17 @@ class MeetingResource extends Resource
     protected static ?string $modelLabel = 'Jadwal & Absensi';
     protected static ?string $pluralModelLabel = 'Jadwal & Absensi';
 
+    // ⭐ TAMBAHAN: Menyembunyikan menu ini dari Sidebar (kiri)
     protected static bool $shouldRegisterNavigation = false;
 
     protected static function permission(): string
     {
         return 'meetings.manage';
     }
+
+    // ==========================================================
+    // FORM
+    // ==========================================================
 
     public static function form(Form $form): Form
     {
@@ -146,6 +151,10 @@ class MeetingResource extends Resource
             ]);
     }
 
+    // ==========================================================
+    // TABLE (Tampilan Lebih Rapi & Profesional)
+    // ==========================================================
+
     public static function table(Table $table): Table
     {
         return $table
@@ -191,8 +200,12 @@ class MeetingResource extends Resource
             ->filters([
                 Tables\Filters\Filter::make('date')
                     ->form([
-                        Forms\Components\DatePicker::make('from')->label('Dari Tanggal')->native(false),
-                        Forms\Components\DatePicker::make('until')->label('Sampai Tanggal')->native(false),
+                        Forms\Components\DatePicker::make('from')
+                            ->label('Dari Tanggal')
+                            ->native(false),
+                        Forms\Components\DatePicker::make('until')
+                            ->label('Sampai Tanggal')
+                            ->native(false),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
@@ -216,13 +229,23 @@ class MeetingResource extends Resource
                 ->icon('heroicon-m-ellipsis-horizontal')
                 ->tooltip('Aksi'),
             ])
-            ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ])
             ->defaultSort('date', 'desc')
-            ->striped()->paginated([10, 25, 50])->defaultPaginationPageOption(10)
+            ->striped()
+            ->paginated([10, 25, 50])
+            ->defaultPaginationPageOption(10)
             ->emptyStateHeading('Belum Ada Pertemuan')
             ->emptyStateDescription('Buat pertemuan pertama dengan klik tombol di atas.')
             ->emptyStateIcon('heroicon-o-calendar-days');
     }
+
+    // ==========================================================
+    // RELATIONS & QUERY
+    // ==========================================================
 
     public static function getRelations(): array
     {
@@ -236,6 +259,7 @@ class MeetingResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
+        // Guru hanya bisa melihat jadwal kelasnya sendiri
         if ($user && $user->role === 'guru') {
             return $query->whereHas('classGroup', fn ($q) => $q->where('teacher_id', $user->id));
         }
@@ -244,13 +268,13 @@ class MeetingResource extends Resource
     }
 
     // ==========================================================
-    // AUTHORIZATION (KHUSUS SUPERADMIN)
+    // AUTHORIZATION (SUPERADMIN & ADMIN)
     // ==========================================================
 
     public static function canCreate(): bool
     {
-        // Hanya Superadmin yang bisa membuat jadwal/absensi manual
-        return auth()->user()->role === 'superadmin';
+        // ✅ Admin dan Superadmin bisa membuat jadwal/absensi manual
+        return auth()->user()->isAdmin();
     }
 
     public static function canView($record): bool
@@ -265,14 +289,14 @@ class MeetingResource extends Resource
 
     public static function canEdit($record): bool
     {
-        // Hanya Superadmin yang bisa mengedit absensi secara manual
-        return auth()->user()->role === 'superadmin';
+        // ✅ Admin dan Superadmin bisa mengedit absensi secara manual
+        return auth()->user()->isAdmin();
     }
 
     public static function canDelete($record): bool
     {
-        // Hanya Superadmin yang bisa menghapus absensi
-        return auth()->user()->role === 'superadmin';
+        // ✅ Admin dan Superadmin bisa menghapus absensi
+        return auth()->user()->isAdmin();
     }
 
     public static function getPages(): array
