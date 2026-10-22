@@ -17,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // ⭐ Cache Headers untuk Performance Lighthouse (asset statis)
         $middleware->append(\App\Http\Middleware\CacheHeaders::class);
 
+        $middleware->trustProxies(at: '*');
+
         // Alias yang sudah ada
         $middleware->alias([
             'is_active' => \App\Http\Middleware\EnsureUserIsActive::class,

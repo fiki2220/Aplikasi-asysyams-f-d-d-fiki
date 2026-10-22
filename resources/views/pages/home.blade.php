@@ -321,8 +321,12 @@ foreach ($heroVideoPaths as $videoPath) {
                                 muted
                                 loop
                                 playsinline
+                                autoplay
                                 preload="metadata"
+                                poster="{{ asset('images/logo.png') }}"
                                 data-slide-video>
+                                {{-- ✅ MP4 Fallback untuk HP/iPhone --}}
+                                <source src="{{ str_replace('.webm', '.mp4', $slide['src']) }}" type="video/mp4">
                                 <source src="{{ $slide['src'] }}" type="{{ $slide['mime'] ?? 'video/webm' }}">
                             </video>
                             @else
@@ -1370,7 +1374,7 @@ foreach ($heroVideoPaths as $videoPath) {
                 threshold: 0.5
             });
 
-            pantauKeturun = pantauKetik.observe(elemenTeks);
+            pantauKetik.observe(elemenTeks); /* ✅ TYPO FIX */
         })();
 
         /* 2. REVEAL ANIMATION & HELPER SELECTORS */
@@ -1379,7 +1383,7 @@ foreach ($heroVideoPaths as $videoPath) {
         function cariGaris(judul) {
             return judul.querySelector(".siap-animasi-garis") ||
                 (judul.nextElementSibling?.classList.contains("siap-animasi-garis") ? judul.nextElementSibling : null) ||
-                judul.parentElement?.querySelector(".siap-animas-garis");
+                judul.parentElement?.querySelector(".siap-animasi-garis"); /* ✅ TYPO FIX */
         }
 
         function jalankanAnimasiJudul(judul) {

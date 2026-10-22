@@ -13,7 +13,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 
-// ✅ IMPORT YANG BENAR UNTUK FILAMENT 3
+// ✅ IMPORT UNTUK EXPORT EXCEL
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
@@ -80,6 +80,10 @@ class UserResource extends Resource
                 'gender',
                 'file_kk',
                 'file_akta',
+                'father_name', // ✅ TAMBAHAN
+                'mother_name', // ✅ TAMBAHAN
+                'parent_name', // ✅ TAMBAHAN
+                'parent_phone',// ✅ TAMBAHAN
                 'terms_accepted_at',
                 'created_at',
                 'updated_at',
@@ -155,7 +159,6 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
-                // SECTION 1: INFORMASI AKUN
                 Forms\Components\Section::make('Informasi Akun')
                     ->description('Masukkan data dasar pengguna.')
                     ->icon('heroicon-o-identification')
@@ -196,7 +199,6 @@ class UserResource extends Resource
                     ])
                     ->columns(2),
 
-                // SECTION 2: KEAMANAN AKUN
                 Forms\Components\Section::make('Keamanan Akun')
                     ->description('Ubah password pengguna. Kosongkan jika tidak ingin mengganti password.')
                     ->icon('heroicon-o-lock-closed')
@@ -229,7 +231,6 @@ class UserResource extends Resource
                     ->collapsible()
                     ->collapsed(fn (string $operation): bool => $operation === 'edit'),
 
-                // SECTION 3: PROFIL PENGGUNA
                 Forms\Components\Section::make('Profil Pengguna')
                     ->description('Lengkapi data profil pengguna.')
                     ->icon('heroicon-o-user-circle')
@@ -237,7 +238,6 @@ class UserResource extends Resource
                     ->columns(2)
                     ->visible(fn (): bool => count(static::getProfileFields()) > 0),
 
-                // SECTION 4: DATA SISWA / SANTRI
                 Forms\Components\Section::make('Data Siswa / Santri')
                     ->description('Wajib diisi jika peran adalah Siswa.')
                     ->icon('heroicon-o-academic-cap')
@@ -245,7 +245,6 @@ class UserResource extends Resource
                     ->columns(2)
                     ->visible(fn (Forms\Get $get): bool => $get('role') === 'student' && count(static::getStudentFields()) > 0),
 
-                // SECTION 5: DOKUMEN PERSYARATAN PPDB
                 Forms\Components\Section::make('Dokumen Persyaratan PPDB')
                     ->description('Dokumen yang diupload saat pendaftaran. Klik file untuk preview atau download.')
                     ->icon('heroicon-o-document-text')
@@ -254,7 +253,6 @@ class UserResource extends Resource
                     ->visible(fn (Forms\Get $get): bool => $get('role') === 'student' && count(static::getDocumentFields()) > 0)
                     ->collapsible(),
 
-                // SECTION 6: DATA GURU
                 Forms\Components\Section::make('Data Guru')
                     ->description('Isi data tambahan jika peran adalah Guru.')
                     ->icon('heroicon-o-briefcase')
@@ -262,7 +260,6 @@ class UserResource extends Resource
                     ->columns(2)
                     ->visible(fn (Forms\Get $get): bool => $get('role') === 'guru' && count(static::getTeacherFields()) > 0),
 
-                // SECTION 7: STATUS AKUN
                 Forms\Components\Section::make('Status Akun')
                     ->description('Atur status aktif pengguna dan verifikasi persetujuan syarat.')
                     ->icon('heroicon-o-signal')
@@ -479,7 +476,6 @@ class UserResource extends Resource
     {
         $fields = [];
 
-        // ✅ Ijazah & Pas Foto Dihapus
         $documents = [
             'file_kk'     => ['label' => 'Kartu Keluarga (KK)'],
             'file_akta'   => ['label' => 'Akta Kelahiran'],
@@ -546,7 +542,6 @@ class UserResource extends Resource
             ->columns(static::getTableColumns())
             ->filters(static::getTableFilters())
             
-            // ✅ FITUR EXPORT EXCEL (HEADER)
             ->headerActions([
                 ExportAction::make()
                     ->label('Export ke Excel')
@@ -595,7 +590,6 @@ class UserResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    // ✅ FITUR EXPORT EXCEL (BULK)
                     ExportBulkAction::make()
                         ->label('Export Terpilih (Excel)')
                         ->color('success')
@@ -671,6 +665,19 @@ class UserResource extends Resource
                 ->iconPosition('before')
                 ->color('gray')
                 ->toggleable(),
+
+            // ✅ TAMBAHAN KOLOM ORANG TUA
+            Tables\Columns\TextColumn::make('father_name')
+                ->label('Nama Ayah')
+                ->searchable()
+                ->placeholder('—')
+                ->toggleable(isToggledHiddenByDefault: true),
+
+            Tables\Columns\TextColumn::make('mother_name')
+                ->label('Nama Ibu')
+                ->searchable()
+                ->placeholder('—')
+                ->toggleable(isToggledHiddenByDefault: true),
 
             Tables\Columns\TextColumn::make('program')
                 ->label('Program')

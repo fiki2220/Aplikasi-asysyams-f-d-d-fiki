@@ -48,8 +48,8 @@ class CandidateResource extends Resource
                 'nisn', 'program', 'grade_level', 'gender',
                 'school_origin', 'mother_name', 'father_name',
                 'parent_phone', 'phone', 'birth_place', 'birth_date',
-                'address', 'file_kk', 'file_akta', 'file_ijazah',
-                'file_foto', 'terms_accepted_at', 'created_at', 'updated_at',
+                'address', 'file_kk', 'file_akta', // ✅ Hanya KK & Akta
+                'terms_accepted_at', 'created_at', 'updated_at',
             ]);
     }
 
@@ -199,6 +199,7 @@ class CandidateResource extends Resource
                             ->placeholder('—'),
                     ])->columns(2),
 
+                // ✅ Section Dokumen (Hanya KK & Akta)
                 Infolists\Components\Section::make('Dokumen Persyaratan')
                     ->icon('heroicon-o-document-text')
                     ->schema([
@@ -207,18 +208,9 @@ class CandidateResource extends Resource
                             ->formatStateUsing(fn (?string $state): string => $state ? '✅ Sudah diupload' : '❌ Belum ada')
                             ->badge()
                             ->color(fn (?string $state): string => $state ? 'success' : 'danger'),
+                            
                         Infolists\Components\TextEntry::make('file_akta')
                             ->label('Akta Kelahiran')
-                            ->formatStateUsing(fn (?string $state): string => $state ? '✅ Sudah diupload' : '❌ Belum ada')
-                            ->badge()
-                            ->color(fn (?string $state): string => $state ? 'success' : 'danger'),
-                        Infolists\Components\TextEntry::make('file_ijazah')
-                            ->label('Ijazah / SKL')
-                            ->formatStateUsing(fn (?string $state): string => $state ? '✅ Sudah diupload' : '❌ Belum ada')
-                            ->badge()
-                            ->color(fn (?string $state): string => $state ? 'success' : 'danger'),
-                        Infolists\Components\TextEntry::make('file_foto')
-                            ->label('Pas Foto 3x4')
                             ->formatStateUsing(fn (?string $state): string => $state ? '✅ Sudah diupload' : '❌ Belum ada')
                             ->badge()
                             ->color(fn (?string $state): string => $state ? 'success' : 'danger'),
@@ -310,28 +302,28 @@ class CandidateResource extends Resource
                     ->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                // ⭐ Indikator kelengkapan dokumen (x/4)
+                // ✅ Indikator kelengkapan dokumen (x/2)
                 Tables\Columns\TextColumn::make('documents_count')
                     ->label('Dokumen')
                     ->getStateUsing(function (User $record): string {
                         $count = 0;
-                        foreach (['file_kk', 'file_akta', 'file_ijazah', 'file_foto'] as $field) {
+                        foreach (['file_kk', 'file_akta'] as $field) { // Hanya 2 dokumen
                             if (! empty($record->{$field})) {
                                 $count++;
                             }
                         }
-                        return $count . '/4';
+                        return $count . '/2';
                     })
                     ->badge()
                     ->color(fn (string $state): string => match (true) {
-                        $state === '4/4' => 'success',
+                        $state === '2/2' => 'success',
                         str_starts_with($state, '0') => 'danger',
                         default => 'warning',
                     })
-                    ->icon(fn (string $state): string => $state === '4/4'
+                    ->icon(fn (string $state): string => $state === '2/2'
                         ? 'heroicon-m-check-circle'
                         : 'heroicon-m-document')
-                    ->tooltip('Kelengkapan dokumen dari 4 dokumen wajib'),
+                    ->tooltip('Kelengkapan dokumen dari 2 dokumen wajib'),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Tgl Daftar')
@@ -356,14 +348,12 @@ class CandidateResource extends Resource
                         'P' => 'Perempuan',
                     ]),
 
-                // Filter kelengkapan dokumen
+                // ✅ Filter kelengkapan dokumen (KK & Akta)
                 Tables\Filters\Filter::make('documents_complete')
-                    ->label('Hanya Dokumen Lengkap (4/4)')
+                    ->label('Hanya Dokumen Lengkap (2/2)')
                     ->query(fn (Builder $query): Builder => $query
                         ->whereNotNull('file_kk')
-                        ->whereNotNull('file_akta')
-                        ->whereNotNull('file_ijazah')
-                        ->whereNotNull('file_foto'))
+                        ->whereNotNull('file_akta'))
                     ->toggle(),
 
                 // Filter rentang tanggal daftar
